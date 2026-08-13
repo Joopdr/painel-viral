@@ -557,8 +557,8 @@
             setSystemState('processing');
             showLoading('Cérebro do Sistema');
             
-            // Usando flash-preview para eficiência e schema handling impecável
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-preview:generateContent?key=${apiKey}`;
+            // Usando o gemini-1.5-flash (versão estável, sem o -preview)
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
             const promptText = `Você é o orquestrador do SaaS 'Viralize.AI', uma agência de inteligência artificial focada em retenção e viralização para streamers.
 Aja através de 4 agentes trabalhando em cadeia para analisar este briefing do usuário: "${input}"
