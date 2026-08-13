@@ -404,8 +404,7 @@ async def gerar_cortes(video_url: str):
             showTyping('Diretor de Virais'); 
             
             // ATENÇÃO: COLE SEU LINK DO RENDER ENTRE AS ASPAS ABAIXO
-            const renderUrl = "https://backend-viral.onrender.com"; 
-
+            const renderUrl = "[https://backend-viral.onrender.com](https://backend-viral.onrender.com)"
             try {
                 const response = await fetch(`${renderUrl}/gerar-ideia?tema=${encodeURIComponent(userBriefing)}`, {
                     method: 'POST',
