@@ -305,15 +305,10 @@ async def gerar_cortes(video_url: str):
     </main>
 
     <script>
+           <script>
         // === 1. DADOS DA EQUIPE ===
         const agentsConfig = [
-            { id: 'diretor', name: 'Diretor de Virais', icon: 'fa-sitemap', color: 'text-indigo-400', desc: 'Orquestrador. Recebe o briefing, define a estratégia geral e delega tarefas. Avalia o trabalho dos outros antes de finalizar.' },
-            { id: 'cacador', name: 'Caçador de Tendências', icon: 'fa-radar', color: 'text-pink-400', desc: 'Usa navegação real para buscar trends atuais no TikTok e Reels, músicas em alta e formatos de memes que estão funcionando hoje.' },
-            { id: 'designer', name: 'Designer de Thumbnails', icon: 'fa-image', color: 'text-yellow-400', desc: 'Cria prompts visuais precisos (Midjourney/Flux) para criar capas magnéticas para o YouTube Shorts e Reels.' },
-            { id: 'editor', name: 'Editor de Retenção', icon: 'fa-scissors', color: 'text-blue-400', desc: 'Foca 100% na retenção de público. Decide onde cortar, onde dar zoom, onde colocar legendas e SFX para evitar que o usuário role a tela.' },
-            { id: 'estrategista', name: 'Estrategista Social', icon: 'fa-pen-nib', color: 'text-emerald-400', desc: 'Copywriter avançado. Escreve legendas, cria CTAs eficientes e planeja hashtags focadas em conversão (levar pro canal da Twitch).' },
-            { id: 'gestor', name: 'Gestor de Tráfego', icon: 'fa-bullseye', color: 'text-orange-400', desc: 'Configura orçamentos, segmentação de público (idade, interesses em games) e lida com Meta Ads / TikTok Ads para impulsionar os cortes.' },
-            { id: 'analista', name: 'Analista de Monetização', icon: 'fa-money-bill-wave', color: 'text-cyan-400', desc: 'Busca dados reais sobre RPM de nicho, viabilidade de patrocínios e avalia o Retorno sobre Investimento (ROI) da campanha.' }
+            { id: 'diretor', name: 'Diretor de Virais', icon: 'fa-sitemap', color: 'text-indigo-400', desc: 'Orquestrador. Recebe o briefing e conversa com o servidor backend.' }
         ];
 
         const colorMap = {
@@ -323,21 +318,6 @@ async def gerar_cortes(video_url: str):
         agentsConfig.forEach(a => { colorMap[a.name] = a.color; });
 
         // === 2. INICIALIZAÇÃO DA UI ===
-        function renderTeam() {
-            const grid = document.getElementById('team-grid');
-            let html = '';
-            agentsConfig.forEach(agent => {
-                html += '<div class="ios-panel p-6 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors">' +
-                            '<div class="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center mb-4">' +
-                                '<i class="fa-solid ' + agent.icon + ' text-xl ' + agent.color + '"></i>' +
-                            '</div>' +
-                            '<h3 class="font-bold text-lg text-white mb-2">' + agent.name + '</h3>' +
-                            '<p class="text-textMuted text-sm leading-relaxed">' + agent.desc + '</p>' +
-                        '</div>';
-            });
-            grid.innerHTML = html;
-        }
-
         function switchTab(tabId) {
             const sections = ['operacoes', 'analytics', 'video-lab', 'equipe', 'backend'];
             sections.forEach(sec => {
@@ -361,55 +341,9 @@ async def gerar_cortes(video_url: str):
                     }
                 }
             });
-
-            if(tabId === 'analytics' && !window.myChart) {
-                initChart();
-            }
         }
 
-        function initChart() {
-            const ctx = document.getElementById('growthChart');
-            if(!ctx) return;
-            
-            Chart.defaults.color = '#a1a1aa';
-            Chart.defaults.font.family = 'Inter';
-
-            window.myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-                    datasets: [{
-                        label: 'Views Acumuladas',
-                        data: [1000, 3500, 12000, 35000, 80000, 150000, 280000],
-                        borderColor: '#0A84FF',
-                        backgroundColor: 'rgba(10, 132, 255, 0.1)',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#000000',
-                        pointBorderColor: '#0A84FF',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { 
-                            beginAtZero: true,
-                            grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false }
-                        },
-                        x: {
-                            grid: { display: false, drawBorder: false }
-                        }
-                    }
-                }
-            });
-        }
-
-        // === 3. LÓGICA DO CHAT E SIMULAÇÃO DE AGENTES ===
+        // === 3. LÓGICA DO CHAT ===
         const chatBox = document.getElementById('chat-box');
         let isProcessing = false;
 
@@ -423,17 +357,11 @@ async def gerar_cortes(video_url: str):
             
             let iconClass = 'fa-robot';
             if(sender === 'Você') iconClass = 'fa-user';
-            else {
-                const ag = agentsConfig.find(a => a.name === sender);
-                if(ag) iconClass = ag.icon;
-            }
+            else if(sender === 'Diretor de Virais') iconClass = 'fa-sitemap';
 
             const colorClass = colorMap[sender] || 'text-white';
             
-            let formattedText = text
-                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
-                .replace(/\n- /g, '<br>• ')
-                .replace(/\n/g, '<br>');
+            let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>').replace(/\n/g, '<br>');
 
             msgDiv.innerHTML = 
                 '<div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0 shadow-inner">' +
@@ -471,14 +399,14 @@ async def gerar_cortes(video_url: str):
             if(el) el.remove();
         }
 
-           async function runAgentCycle(userBriefing) {
+        // --- AQUI É O MOTOR QUE FALA COM SEU SERVIDOR RENDER ---
+        async function runAgentCycle(userBriefing) {
             showTyping('Diretor de Virais'); 
             
-            // ATENÇÃO: COLE O LINK DO SEU RENDER AQUI DENTRO DAS ASPAS
+            // ATENÇÃO: COLE SEU LINK DO RENDER ENTRE AS ASPAS ABAIXO
             const renderUrl = "https://backend-viral.onrender.com"; 
 
             try {
-                // Aqui o seu site chama o seu servidor Python!
                 const response = await fetch(`${renderUrl}/gerar-ideia?tema=${encodeURIComponent(userBriefing)}`, {
                     method: 'POST',
                     headers: { 'Accept': 'application/json' }
@@ -495,101 +423,8 @@ async def gerar_cortes(video_url: str):
 
             } catch(e) {
                 removeTyping();
-                addMessage('Sistema', `⚠️ Ocorreu um problema de conexão com o servidor: ${e.message}`);
+                addMessage('Sistema', `⚠️ Problema ao falar com o servidor Render: ${e.message}. O link está certo?`);
             } finally {
-                isProcessing = false;
-            }
-        }
-
-            showTyping('Diretor de Virais'); 
-            
-            const apiKey = ""; 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-
-            const prompt = `Você orquestra uma equipe IA de marketing viral para streamers.
-            O usuário enviou este briefing: "${userBriefing}"
-            
-            OBRIGATÓRIO: Use a ferramenta Google Search para basear a resposta em DADOS REAIS DE HOJE.
-            Retorne ESTRITAMENTE uma array JSON válida com objetos { "agent": "Nome do Agente", "text": "Mensagem" }.
-            
-            Membros obrigatórios a responder (nessa ordem):
-            1. Diretor de Virais (Analisa).
-            2. Caçador de Tendências (Mostra trends atuais reais pesquisadas).
-            3. Designer de Thumbnails (Sugere visuais focados em CTR).
-            4. Editor de Retenção (Sugere cortes precisos).
-            5. Estrategista Social (Define copy/hashtags).
-            6. Analista de Monetização (Informa RPM real pesquisado e expectativas).
-            
-            SEM blocos markdown tipo \`\`\`json em volta. Somente o JSON.`;
-
-            const payload = {
-                contents: [{ role: "user", parts: [{ text: prompt }] }],
-                tools: [{ "google_search": {} }],
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "ARRAY",
-                        items: {
-                            type: "OBJECT",
-                            properties: {
-                                agent: { type: "STRING" },
-                                text: { type: "STRING" }
-                            },
-                            required: ["agent", "text"]
-                        }
-                    }
-                }
-            };
-
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                const result = await response.json();
-                removeTyping();
-
-                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content) {
-                    let jsonStr = result.candidates[0].content.parts[0].text;
-                    jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
-                    
-                    let steps;
-                    try {
-                        steps = JSON.parse(jsonStr);
-                    } catch (parseErr) {
-                        throw new Error("A IA retornou dados fora de formato. Tente refazer o briefing.");
-                    }
-
-                    for(let i = 0; i < steps.length; i++) {
-                        const agentData = steps[i];
-                        let agentName = agentsConfig.find(a => agentData.agent.includes(a.name.split(' ')[0]))?.name || agentData.agent;
-                        
-                        showTyping(agentName);
-                        // Delay visual humano para leitura
-                        const delay = Math.min(4000, 1500 + (agentData.text.length * 8));
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        removeTyping();
-                        addMessage(agentName, agentData.text);
-                    }
-
-                    // Preenche Dashboard de conclusão com Dados Estimados
-                    document.getElementById('metric-alcance').innerHTML = 'Calculando...';
-                    document.getElementById('metric-cpc').innerHTML = 'R$ 0.12 - 0.25';
-                    document.getElementById('metric-rpm').innerHTML = 'Monitorando';
-                    document.getElementById('metric-conv').innerHTML = '+5.2%';
-
-                } else {
-                    throw new Error("Resposta vazia do servidor.");
-                }
-
-            } catch(e) {
-                removeTyping();
-                console.error("Erro na API:", e);
-                addMessage('Sistema', `⚠️ Ocorreu um problema: ${e.message}. O sistema foi destravado.`);
-            } finally {
-                // Impede travamentos permanentes liberando o chat
                 isProcessing = false;
             }
         }
@@ -608,11 +443,6 @@ async def gerar_cortes(video_url: str):
 
             runAgentCycle(text);
         }
-
-        window.onload = function() {
-            renderTeam();
-        };
-
     </script>
 </body>
 </html>
