@@ -3,444 +3,661 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Time de Viralização</title>
+    <title>Viralize.AI | Workspace</title>
     
-    <!-- Carregando Tailwind PRIMEIRO -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- Configuração do Tailwind -->
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Inter', 'sans-serif'],
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
                     },
                     colors: {
-                        primary: '#0A84FF', // Blue iOS
-                        primaryHover: '#007AFF',
-                        background: '#000000', 
-                        textMain: '#FFFFFF',   
-                        textMuted: '#EBEBF599' // Secondary label iOS
+                        base: {
+                            0: '#000000',
+                            50: '#09090b', // Main background
+                            100: '#18181b', // Surface
+                            200: '#27272a', // Borders
+                            300: '#3f3f46', // Hover states
+                            400: '#52525b', // Muted text
+                            500: '#71717a', // Secondary icons
+                            600: '#a1a1aa', // Secondary text
+                            800: '#e4e4e7', // Primary text
+                            900: '#fafafa', // Highlights
+                        }
                     }
                 }
             }
         }
     </script>
 
-    <!-- Outras Bibliotecas -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
-        /* Fundo Animado iOS/macOS */
         body {
-            font-family: '-apple-system', 'BlinkMacSystemFont', 'Inter', sans-serif;
-            background: radial-gradient(circle at top right, #1f1b3b, #000000 50%),
-                        radial-gradient(circle at bottom left, #0e1830, #000000 50%);
-            background-color: #000000;
-            background-attachment: fixed;
-            color: theme('colors.textMain');
+            background-color: theme('colors.base.50');
+            color: theme('colors.base.800');
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow: hidden;
+            font-size: 13px;
         }
-        
-        /* Scrollbar elegante */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
 
-        /* iOS Glassmorphism Base */
-        .ios-glass {
-            background: rgba(30, 30, 35, 0.45);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
-        }
-        
-        /* Glass para cards internos */
-        .ios-panel {
-            background: rgba(255, 255, 255, 0.04);
+        /* Minimal, precise scrollbars */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: theme('colors.base.300'); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: theme('colors.base.400'); }
+
+        /* Subtle glass for specific sticky elements (not cards) */
+        .glass-header {
+            background: rgba(9, 9, 11, 0.7);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 20px;
         }
 
-        .typing-indicator span {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            background-color: #0A84FF;
-            border-radius: 50%;
-            margin: 0 2px;
-            animation: bounce 1.4s infinite ease-in-out both;
+        /* Focus states for accessibility without glow */
+        *:focus-visible {
+            outline: 1px solid theme('colors.base.500');
+            outline-offset: 2px;
         }
-        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
         
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0.4); opacity: 0.5; }
-            40% { transform: scale(1); opacity: 1; }
+        .nav-item.active {
+            background-color: theme('colors.base.100');
+            color: theme('colors.base.900');
+        }
+
+        /* Estilos para textos ricos e longos no Log */
+        .log-content b, .log-content strong {
+            color: theme('colors.base.900');
+            font-weight: 600;
+        }
+        .log-content p {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+        .log-content ul {
+            list-style-type: disc;
+            padding-left: 1.25rem;
+            margin-bottom: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .log-content li {
+            margin-bottom: 0.35rem;
+            line-height: 1.5;
+        }
+        .log-content:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Loading progress pulse */
+        @keyframes subtle-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-processing {
+            animation: subtle-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
     </style>
 </head>
-<body class="h-screen w-full flex overflow-hidden text-sm selection:bg-blue-500/30 p-4 gap-4">
+<body class="flex h-screen w-full">
 
-    <!-- === SIDEBAR FLUTUANTE === -->
-    <nav class="w-64 ios-glass rounded-[2rem] flex flex-col justify-between h-full z-20 shrink-0 overflow-hidden">
-        <div>
-            <!-- Logotipo -->
-            <div class="p-6 flex items-center gap-3 border-b border-white/5">
-                <div class="w-10 h-10 rounded-[14px] bg-gradient-to-br from-blue-500 to-indigo-500 text-white flex items-center justify-center shadow-md">
-                    <i class="fa-solid fa-layer-group text-lg"></i>
-                </div>
-                <div>
-                    <h1 class="font-bold text-textMain tracking-tight text-lg">Viralize.AI</h1>
-                    <p class="text-[11px] text-textMuted font-medium mt-0.5">Gestão iOS-Style</p>
+    <aside class="w-[240px] flex-shrink-0 bg-base-50 border-r border-base-200 flex flex-col z-20">
+        <!-- Workspace Header -->
+        <div class="h-12 flex items-center px-4 border-b border-base-200 shrink-0">
+            <div class="flex items-center gap-2 text-base-900 cursor-pointer">
+                <i class="ph-fill ph-triangle w-4 h-4 text-base-600"></i>
+                <span class="font-medium text-sm tracking-tight">Viralize.AI</span>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-6">
+            <!-- Platform Menu -->
+            <div>
+                <div class="text-[10px] font-semibold text-base-500 mb-2 px-2 tracking-widest uppercase">Plataforma</div>
+                <div class="space-y-0.5">
+                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-item w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-base-600 hover:text-base-900 hover:bg-base-100/50 transition-colors">
+                        <i class="ph ph-squares-four text-base-500 text-sm"></i>
+                        <span>Dashboard</span>
+                    </button>
+                    <button onclick="switchTab('warroom')" id="tab-warroom" class="nav-item active w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-base-600 hover:text-base-900 hover:bg-base-100/50 transition-colors">
+                        <i class="ph ph-terminal-window text-base-500 text-sm"></i>
+                        <span>Sala de Guerra</span>
+                    </button>
+                    <button onclick="switchTab('videolab')" id="tab-videolab" class="nav-item w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-base-600 hover:text-base-900 hover:bg-base-100/50 transition-colors">
+                        <i class="ph ph-video-camera text-base-500 text-sm"></i>
+                        <span>Vídeo Lab</span>
+                    </button>
+                    <button class="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-base-500 cursor-not-allowed">
+                        <div class="flex items-center gap-2.5">
+                            <i class="ph ph-folder text-base-500 text-sm"></i>
+                            <span>Biblioteca</span>
+                        </div>
+                        <span class="text-[9px] border border-base-200 px-1 rounded text-base-500">Breve</span>
+                    </button>
+                    <button onclick="switchTab('analytics')" id="tab-analytics" class="nav-item w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-base-600 hover:text-base-900 hover:bg-base-100/50 transition-colors">
+                        <i class="ph ph-chart-line-up text-base-500 text-sm"></i>
+                        <span>Analytics</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Navegação -->
-            <div class="p-4 space-y-2" id="nav-menu">
-                <button onclick="switchTab('operacoes')" id="tab-operacoes" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/10 text-white font-medium transition-all shadow-sm">
-                    <i class="fa-solid fa-message w-5 text-center"></i> Sala de Guerra
-                </button>
-                <button onclick="switchTab('analytics')" id="tab-analytics" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-textMuted hover:bg-white/5 hover:text-white font-medium transition-all">
-                    <i class="fa-solid fa-chart-pie w-5 text-center"></i> Analytics & ROI
-                </button>
-                <button onclick="switchTab('video-lab')" id="tab-video-lab" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-textMuted hover:bg-white/5 hover:text-white font-medium transition-all">
-                    <i class="fa-solid fa-film w-5 text-center"></i> Edição IA
-                </button>
-                <button onclick="switchTab('equipe')" id="tab-equipe" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-textMuted hover:bg-white/5 hover:text-white font-medium transition-all">
-                    <i class="fa-solid fa-users w-5 text-center"></i> Consultores
-                </button>
-                <button onclick="switchTab('backend')" id="tab-backend" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-textMuted hover:bg-white/5 hover:text-white font-medium transition-all">
-                    <i class="fa-solid fa-server w-5 text-center"></i> Colocar Online
-                </button>
+            <!-- AI Team Status -->
+            <div>
+                <div class="text-[10px] font-semibold text-base-500 mb-2 px-2 tracking-widest uppercase flex items-center justify-between">
+                    <span>Status da Equipe</span>
+                    <i class="ph ph-activity text-base-500"></i>
+                </div>
+                <div class="space-y-0.5" id="agent-status-list">
+                    <div class="flex items-center gap-2.5 px-2 py-1.5 text-base-600">
+                        <div class="w-1.5 h-1.5 rounded-full bg-base-300" id="status-Diretor"></div>
+                        <span class="truncate">Diretor</span>
+                    </div>
+                    <div class="flex items-center gap-2.5 px-2 py-1.5 text-base-600">
+                        <div class="w-1.5 h-1.5 rounded-full bg-base-300" id="status-Caçador de Tendências"></div>
+                        <span class="truncate">Caçador de Tendências</span>
+                    </div>
+                    <div class="flex items-center gap-2.5 px-2 py-1.5 text-base-600">
+                        <div class="w-1.5 h-1.5 rounded-full bg-base-300" id="status-Editor de Retenção"></div>
+                        <span class="truncate">Editor de Retenção</span>
+                    </div>
+                    <div class="flex items-center gap-2.5 px-2 py-1.5 text-base-600">
+                        <div class="w-1.5 h-1.5 rounded-full bg-base-300" id="status-Estrategista"></div>
+                        <span class="truncate">Estrategista</span>
+                    </div>
+                </div>
             </div>
-        </div>
-        
-        <!-- Status -->
-        <div class="p-6 border-t border-white/5 flex items-center gap-3 bg-white/5 backdrop-blur-md">
-            <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
-            <span class="text-xs font-medium text-textMuted">API Conectada</span>
-        </div>
-    </nav>
+        </nav>
 
-    <!-- === ÁREA PRINCIPAL FLUTUANTE === -->
-    <main class="flex-1 flex flex-col h-full relative ios-glass rounded-[2rem] overflow-hidden">
-        
-        <!-- === VIEW: OPERAÇÕES (CHAT) === -->
-        <section id="view-operacoes" class="flex flex-col h-full absolute inset-0 transition-opacity duration-300">
-            <header class="h-16 border-b border-white/5 flex items-center px-8 shrink-0 bg-white/5 backdrop-blur-md z-10">
-                <h2 class="font-semibold flex items-center gap-2 text-[15px]">
-                    <i class="fa-solid fa-bolt text-blue-400"></i> Orquestração em Tempo Real
-                </h2>
+        <!-- User Profile (Discrete) -->
+        <div class="p-3 border-t border-base-200 shrink-0">
+            <button onclick="configurarChaveAPI()" class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-base-100 transition-colors text-left group">
+                <div class="w-5 h-5 rounded bg-base-200 flex items-center justify-center shrink-0">
+                    <i class="ph-fill ph-key text-base-500 text-xs group-hover:text-base-900"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-medium text-base-800 truncate">Configurar API</div>
+                    <div class="text-[10px] text-base-500 truncate" id="api-status">Chave Pendente</div>
+                </div>
+                <i class="ph ph-caret-right text-base-500"></i>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0 bg-base-50 relative">
+
+        <!-- 1. DASHBOARD VIEW -->
+        <section id="view-dashboard" class="absolute inset-0 overflow-y-auto hidden">
+            <header class="h-12 border-b border-base-200 px-6 flex items-center glass-header sticky top-0 z-10">
+                <h1 class="text-sm font-medium text-base-900">Dashboard</h1>
+            </header>
+            <div class="p-6 max-w-5xl mx-auto space-y-6">
+                <!-- Empty State / Welcome -->
+                <div class="border border-base-200 bg-base-100/50 rounded-lg p-8 text-center flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full border border-base-200 bg-base-100 flex items-center justify-center mb-4 text-base-500">
+                        <i class="ph ph-sparkle text-lg"></i>
+                    </div>
+                    <h2 class="text-base font-medium text-base-900 mb-1">Nenhuma Campanha Ativa</h2>
+                    <p class="text-base-600 max-w-md">Inicie um novo processo na Sala de Guerra para começar a extrair momentos virais do seu material.</p>
+                    <button onclick="switchTab('warroom')" class="mt-6 bg-base-900 text-base-0 px-4 py-2 rounded-md font-medium text-xs hover:bg-base-800 transition-colors">
+                        Ir para Sala de Guerra
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. WAR ROOM (Process Log UI) -->
+        <section id="view-warroom" class="absolute inset-0 flex flex-col">
+            <header class="h-12 border-b border-base-200 px-6 flex items-center justify-between glass-header shrink-0 z-10">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-base-900">Log de Processo</span>
+                    <span class="text-base-200">/</span>
+                    <span class="text-xs text-base-500 flex items-center gap-1.5" id="header-status">
+                        <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Ocioso
+                    </span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-[11px] text-base-500 font-mono">ID: WR-001</span>
+                    <button class="w-6 h-6 rounded flex items-center justify-center text-base-500 hover:text-base-900 hover:bg-base-100 transition-colors">
+                        <i class="ph ph-dots-three text-lg"></i>
+                    </button>
+                </div>
             </header>
 
-            <div id="chat-box" class="flex-1 overflow-y-auto p-8 space-y-6 pb-32">
-                <div class="flex gap-4 p-5 rounded-3xl ios-panel">
-                    <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-                        <i class="fa-solid fa-robot text-textMuted"></i>
+            <!-- Activity Feed -->
+            <div id="process-feed" class="flex-1 overflow-y-auto p-6 space-y-1">
+                <!-- System Init Log -->
+                <div class="flex gap-4 group py-2">
+                    <div class="w-5 h-5 rounded flex items-center justify-center bg-base-100 border border-base-200 text-base-500 shrink-0 mt-0.5">
+                        <i class="ph ph-terminal-window text-[11px]"></i>
                     </div>
-                    <div class="flex-1">
-                        <p class="font-semibold text-white mb-1">Sistema</p>
-                        <p class="text-textMuted leading-relaxed">Painel pronto. Descreva seu vídeo ou ideia. Os agentes farão pesquisas na web para basear as decisões em dados.</p>
+                    <div class="flex-1 pb-2">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xs font-medium text-base-800">Sistema</span>
+                            <span class="text-[10px] text-base-500 font-mono" id="init-time">10:00:00 AM</span>
+                        </div>
+                        <div class="text-[13px] text-base-600 leading-relaxed">
+                            Aguardando parâmetros operacionais. Envie um briefing completo descrevendo o seu vídeo, objetivo ou plataforma desejada para iniciar o pipeline de extração. <br><br>
+                            <b>Dica:</b> Tente algo como <i>"Quero clipar meu torneio de Warzone de ontem para postar no TikTok"</i>.
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Input Flutuante -->
-            <div class="absolute bottom-6 left-8 right-8 shrink-0">
-                <form id="chat-form" class="relative max-w-4xl mx-auto flex items-end gap-3" onsubmit="handleChatSubmit(event)">
-                    <div class="flex-1 ios-glass rounded-3xl overflow-hidden flex flex-col shadow-2xl">
-                        <textarea id="chat-input" rows="2" class="w-full bg-transparent text-white p-5 focus:outline-none resize-none placeholder:text-white/40" placeholder="Ex: 'Quero postar um clipe da minha live de Valorant de ontem...'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('chat-form').dispatchEvent(new Event('submit')); }"></textarea>
+            <!-- Command Input -->
+            <div class="p-4 border-t border-base-200 bg-base-50 shrink-0">
+                <form id="command-form" class="relative max-w-full mx-auto" onsubmit="handleProcessSubmit(event)">
+                    <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-base-500">
+                        <i class="ph ph-caret-right text-sm"></i>
                     </div>
-                    <button type="submit" id="send-btn" class="h-14 w-14 rounded-full bg-primary text-white font-medium hover:bg-primaryHover transition-colors shadow-lg shadow-blue-500/30 flex items-center justify-center shrink-0">
-                        <i class="fa-solid fa-arrow-up text-lg"></i>
-                    </button>
+                    <input type="text" id="command-input" class="w-full bg-base-100 border border-base-200 rounded-md py-2.5 pl-9 pr-24 text-[13px] text-base-800 placeholder:text-base-500 focus:outline-none focus:border-base-400 focus:ring-1 focus:ring-base-400 transition-all shadow-sm" placeholder="Descreva o contexto do vídeo ou sua estratégia desejada..." autocomplete="off">
+                    <div class="absolute inset-y-1.5 right-1.5 flex items-center gap-1">
+                        <kbd class="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-base-200 text-[10px] text-base-500 font-mono bg-base-50">
+                            <i class="ph ph-key-return"></i> Enter
+                        </kbd>
+                        <button type="submit" id="submit-btn" class="bg-base-800 hover:bg-base-900 text-base-0 rounded px-3 py-1 text-[11px] font-medium transition-colors h-full">
+                            Executar
+                        </button>
+                    </div>
                 </form>
             </div>
         </section>
 
-        <!-- === VIEW: ANALYTICS === -->
-        <section id="view-analytics" class="h-full absolute inset-0 overflow-y-auto p-8 hidden opacity-0 transition-opacity duration-300">
-            <div class="max-w-6xl mx-auto">
-                <header class="mb-8 mt-4">
-                    <h2 class="text-3xl font-bold text-white tracking-tight">Tráfego & Projeções</h2>
-                </header>
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                    <div class="ios-panel p-6">
-                        <p class="text-textMuted text-xs font-semibold uppercase tracking-wider mb-2">Alcance Estimado</p>
-                        <h3 class="text-3xl font-bold text-white" id="metric-alcance">--</h3>
-                    </div>
-                    <div class="ios-panel p-6">
-                        <p class="text-textMuted text-xs font-semibold uppercase tracking-wider mb-2">Custo por Clique (CPC)</p>
-                        <h3 class="text-3xl font-bold text-white" id="metric-cpc">--</h3>
-                    </div>
-                    <div class="ios-panel p-6">
-                        <p class="text-textMuted text-xs font-semibold uppercase tracking-wider mb-2">RPM (Média)</p>
-                        <h3 class="text-3xl font-bold text-white" id="metric-rpm">--</h3>
-                    </div>
-                    <div class="ios-panel p-6 border-b-2 border-b-blue-500">
-                        <p class="text-textMuted text-xs font-semibold uppercase tracking-wider mb-2">Conversão Twitch</p>
-                        <h3 class="text-3xl font-bold text-blue-400" id="metric-conv">--</h3>
-                    </div>
+        <!-- 3. VIDEO LAB VIEW -->
+        <section id="view-videolab" class="absolute inset-0 hidden flex flex-col bg-base-0">
+            <header class="h-12 border-b border-base-200 px-6 flex items-center justify-between glass-header shrink-0 z-10 bg-base-50/90">
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="font-medium text-base-900">Vídeo Lab</span>
+                    <span class="text-base-200">/</span>
+                    <span class="text-base-500">Origem: Pendente</span>
                 </div>
+                <button class="bg-base-900 text-base-0 px-3 py-1 rounded text-[11px] font-medium hover:bg-base-800 transition-colors opacity-50 cursor-not-allowed">
+                    Exportar Projeto
+                </button>
+            </header>
 
-                <div class="ios-panel p-6 h-96">
-                    <h3 class="font-medium mb-4">Projeção de Crescimento (7 Dias)</h3>
-                    <div class="h-72 w-full relative">
-                        <canvas id="growthChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- === VIEW: VIDEO LAB === -->
-        <section id="view-video-lab" class="h-full absolute inset-0 overflow-y-auto p-8 hidden opacity-0 transition-opacity duration-300">
-            <div class="max-w-6xl mx-auto h-full flex flex-col">
-                <header class="mb-8 mt-4">
-                    <h2 class="text-3xl font-bold text-white tracking-tight">Edição por IA</h2>
-                    <p class="text-textMuted mt-1">Integração FFmpeg + OpusClip simulada.</p>
-                </header>
-
-                <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 pb-8">
-                    <div class="lg:col-span-2 flex flex-col gap-4">
-                        <div class="w-full aspect-video bg-black/50 rounded-3xl border border-white/10 relative overflow-hidden flex items-center justify-center shadow-2xl backdrop-blur-md">
-                            <i class="fa-solid fa-play text-5xl text-white/20"></i>
-                            <div class="absolute bottom-4 left-4 right-4 h-1 bg-white/10 rounded-full overflow-hidden">
-                                <div class="h-full bg-blue-500 w-1/3"></div>
-                            </div>
-                        </div>
+            <!-- Video Interface Layout -->
+            <div class="flex-1 flex flex-col min-h-0 p-4 gap-4">
+                <!-- Viewer -->
+                <div class="flex-1 border border-base-200 bg-base-50 rounded-lg flex items-center justify-center relative overflow-hidden group">
+                    <div class="text-center">
+                        <i class="ph ph-video-camera-slash text-3xl text-base-300 mb-2"></i>
+                        <p class="text-xs text-base-500">Nenhuma mídia carregada.</p>
+                        <p class="text-[10px] text-base-600 mt-1">Processe um fluxo de trabalho na Sala de Guerra para gerar os segmentos.</p>
                     </div>
                     
-                    <div class="ios-panel p-6 flex flex-col">
-                        <h3 class="font-semibold mb-4 text-white">Marcadores (Timestamps)</h3>
-                        <div class="flex-1 overflow-y-auto space-y-3" id="video-lab-markers">
-                            <p class="text-textMuted text-sm text-center mt-10">Os cortes da IA aparecerão aqui.</p>
+                    <!-- Timecode Overlay -->
+                    <div class="absolute top-4 left-4 font-mono text-[10px] text-base-500 bg-base-100/80 px-2 py-1 rounded border border-base-200 backdrop-blur">
+                        00:00:00:00
+                    </div>
+                </div>
+
+                <!-- Timeline Simulator -->
+                <div class="h-32 border border-base-200 bg-base-50 rounded-lg p-3 flex flex-col">
+                    <div class="flex justify-between items-center mb-2 px-1">
+                        <span class="text-[10px] font-medium text-base-500 uppercase tracking-widest">Linha do Tempo</span>
+                        <div class="flex gap-2">
+                            <i class="ph ph-magnifying-glass-plus text-base-500 hover:text-base-900 cursor-pointer"></i>
+                            <i class="ph ph-magnifying-glass-minus text-base-500 hover:text-base-900 cursor-pointer"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1 bg-base-100 border border-base-200 rounded relative overflow-hidden">
+                        <!-- Empty timeline state -->
+                        <div class="absolute inset-0 flex items-center justify-center border-t border-base-200 mt-4">
+                            <span class="text-[10px] text-base-400">Aguardando dados de extração...</span>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- === VIEW: EQUIPE === -->
-        <section id="view-equipe" class="h-full absolute inset-0 overflow-y-auto p-8 hidden opacity-0 transition-opacity duration-300">
-             <div class="max-w-6xl mx-auto">
-                <header class="mb-8 mt-4">
-                    <h2 class="text-3xl font-bold text-white tracking-tight">Consultores de IA</h2>
-                </header>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="team-grid"></div>
-             </div>
-        </section>
-
-        <!-- === VIEW: BACKEND === -->
-        <section id="view-backend" class="h-full absolute inset-0 overflow-y-auto p-8 hidden opacity-0 transition-opacity duration-300">
-            <div class="max-w-5xl mx-auto">
-                <header class="mb-10 mt-4">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-semibold mb-4 border border-blue-500/20">
-                        <i class="fa-solid fa-rocket"></i> Guia de Deploy Real
+        <!-- 4. ANALYTICS VIEW -->
+        <section id="view-analytics" class="absolute inset-0 overflow-y-auto hidden">
+            <header class="h-12 border-b border-base-200 px-6 flex items-center glass-header sticky top-0 z-10">
+                <h1 class="text-sm font-medium text-base-900">Inteligência do Criador</h1>
+            </header>
+            
+            <div class="p-6 max-w-5xl mx-auto space-y-6">
+                <!-- Metrics Table -->
+                <div class="border border-base-200 bg-base-100/30 rounded-lg overflow-hidden">
+                    <div class="px-4 py-3 border-b border-base-200 flex justify-between items-center bg-base-50">
+                        <h3 class="text-xs font-semibold text-base-800 uppercase tracking-wide">Visão Geral de Performance</h3>
+                        <button class="text-[11px] text-base-600 hover:text-base-900 border border-base-200 px-2 py-1 rounded bg-base-100">Últimos 7 Dias</button>
                     </div>
-                    <h2 class="text-3xl font-bold text-white tracking-tight">Como colocar isso online?</h2>
-                    <p class="text-textMuted mt-2 text-[15px] leading-relaxed">Para que as IAs editem seus vídeos de verdade, você precisa conectar este HTML a um servidor Backend. O HTML é só o painel de controle; o servidor é quem fará o "trabalho sujo".</p>
-                </header>
-
-                <div class="space-y-6">
-                    <div class="ios-panel p-8">
-                        <h3 class="font-bold text-xl mb-3 text-white flex items-center gap-3">
-                            <span class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm shadow-md">1</span> 
-                            A Arquitetura (Onde hospedar)
-                        </h3>
-                        <p class="text-textMuted mb-4">Você precisará de 3 peças fundamentais:</p>
-                        <ul class="space-y-3 text-sm text-textMuted">
-                            <li class="flex gap-3"><i class="fa-solid fa-globe text-blue-400 mt-1"></i> <span><strong>Frontend (Este Painel):</strong> Hospede de graça na <strong>Vercel</strong> ou <strong>Netlify</strong>. É fácil, basta subir o código HTML.</span></li>
-                            <li class="flex gap-3"><i class="fa-solid fa-server text-purple-400 mt-1"></i> <span><strong>Backend (Servidor Python):</strong> Hospede no <strong>Render.com</strong> (usando Docker). Por que Docker? Porque para cortar vídeos, o servidor precisa do programa `FFmpeg` instalado no sistema operacional, e o Docker permite isso.</span></li>
-                            <li class="flex gap-3"><i class="fa-solid fa-database text-green-400 mt-1"></i> <span><strong>Armazenamento em Nuvem:</strong> Use <strong>Amazon S3</strong>. O seu servidor Python vai baixar a live lá da Twitch, salvar no S3, cortar, e devolver o link final para o Frontend.</span></li>
-                        </ul>
-                    </div>
-
-                    <div class="ios-panel p-8">
-                        <h3 class="font-bold text-xl mb-3 text-white flex items-center gap-3">
-                            <span class="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-sm shadow-md">2</span> 
-                            Código do Servidor (Python/FastAPI)
-                        </h3>
-                        <p class="text-textMuted mb-4">No Render.com, você rodará este código para que o Gemini leia seu vídeo e o FFmpeg corte as partes boas:</p>
-                        <div class="bg-black/50 p-5 rounded-2xl overflow-x-auto text-sm font-mono text-gray-300 border border-white/5">
-from fastapi import FastAPI
-import google.generativeai as genai
-from moviepy.editor import VideoFileClip
-import json
-
-app = FastAPI()
-genai.configure(api_key="SUA_CHAVE_GEMINI_AQUI")
-
-@app.post("/cortar-video-viral")
-async def gerar_cortes(video_url: str):
-    # 1. IA analisa o video inteiro e acha os minutos de ouro
-    prompt = "Retorne um JSON com os tempos (início e fim) da melhor jogada."
-    model = genai.GenerativeModel("gemini-1.5-pro")
-    ia_resposta = model.generate_content([video_url, prompt])
-    dados = json.loads(ia_resposta.text)
-
-    # 2. MoviePy (usando FFmpeg) corta fisicamente o vídeo
-    video = VideoFileClip(video_url)
-    corte = video.subclip(dados['inicio'], dados['fim'])
-    
-    # 3. Crop vertical 9:16 para TikTok
-    (w, h) = corte.size
-    corte_vertical = corte.crop(x1=w/2 - (h*9/16)/2, width=h*9/16)
-    
-    corte_vertical.write_videofile("pronto_pro_tiktok.mp4", codec="libx264")
-    return {"status": "sucesso", "arquivo": "pronto_pro_tiktok.mp4"}
+                    <div class="grid grid-cols-4 divide-x divide-base-200">
+                        <div class="p-4">
+                            <p class="text-[10px] text-base-500 mb-1">Total de Visualizações</p>
+                            <p class="text-lg font-medium text-base-900">--</p>
+                        </div>
+                        <div class="p-4">
+                            <p class="text-[10px] text-base-500 mb-1">Tempo Médio de Retenção</p>
+                            <p class="text-lg font-medium text-base-900">--</p>
+                        </div>
+                        <div class="p-4">
+                            <p class="text-[10px] text-base-500 mb-1">Conversão Estimada</p>
+                            <p class="text-lg font-medium text-base-900">--</p>
+                        </div>
+                        <div class="p-4">
+                            <p class="text-[10px] text-base-500 mb-1">Média do Viral Score</p>
+                            <p class="text-lg font-medium text-base-900">--</p>
                         </div>
                     </div>
                 </div>
+
+                <div class="border border-base-200 bg-base-100/50 rounded-lg p-8 text-center">
+                    <p class="text-xs text-base-500">O módulo de Analytics requer injeção de dados históricos. Conecte suas contas sociais para gerar os gráficos.</p>
+                </div>
             </div>
         </section>
+
     </main>
 
     <script>
-           <script>
-        // === 1. DADOS DA EQUIPE ===
-        const agentsConfig = [
-            { id: 'diretor', name: 'Diretor de Virais', icon: 'fa-sitemap', color: 'text-indigo-400', desc: 'Orquestrador. Recebe o briefing e conversa com o servidor backend.' }
-        ];
-
-        const colorMap = {
-            'Sistema': 'text-textMuted',
-            'Você': 'text-white'
-        };
-        agentsConfig.forEach(a => { colorMap[a.name] = a.color; });
-
-        // === 2. INICIALIZAÇÃO DA UI ===
+        // --- Navigation Logic ---
         function switchTab(tabId) {
-            const sections = ['operacoes', 'analytics', 'video-lab', 'equipe', 'backend'];
-            sections.forEach(sec => {
-                const view = document.getElementById('view-' + sec);
-                const tab = document.getElementById('tab-' + sec);
-                if(view) {
-                    if (sec === tabId) {
+            const tabs = ['dashboard', 'warroom', 'videolab', 'analytics'];
+            tabs.forEach(tab => {
+                const view = document.getElementById('view-' + tab);
+                const btn = document.getElementById('tab-' + tab);
+                if (view && btn) {
+                    if (tab === tabId) {
                         view.classList.remove('hidden');
-                        setTimeout(() => view.classList.remove('opacity-0'), 10);
+                        btn.classList.add('active');
+                        btn.classList.replace('text-base-600', 'text-base-900');
                     } else {
-                        view.classList.add('hidden', 'opacity-0');
-                    }
-                }
-                if(tab) {
-                    if (sec === tabId) {
-                        tab.classList.add('bg-white/10', 'text-white');
-                        tab.classList.remove('text-textMuted');
-                    } else {
-                        tab.classList.remove('bg-white/10', 'text-white');
-                        tab.classList.add('text-textMuted');
+                        view.classList.add('hidden');
+                        btn.classList.remove('active');
+                        btn.classList.replace('text-base-900', 'text-base-600');
                     }
                 }
             });
         }
 
-        // === 3. LÓGICA DO CHAT ===
-        const chatBox = document.getElementById('chat-box');
+        // --- System Logic ---
+        document.getElementById('init-time').innerText = new Date().toLocaleTimeString('pt-BR');
+        
+        const feedBox = document.getElementById('process-feed');
+        const inputField = document.getElementById('command-input');
+        const submitBtn = document.getElementById('submit-btn');
+        const headerStatus = document.getElementById('header-status');
         let isProcessing = false;
 
-        function scrollToBottom() {
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function addMessage(sender, text) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'flex gap-4 p-5 rounded-3xl ' + (sender === 'Você' ? 'bg-blue-500/20 border border-blue-500/30' : 'ios-panel');
+        // Gerenciamento de Chave API Segura (Local Storage)
+        function configurarChaveAPI() {
+            const chaveAtual = localStorage.getItem('gemini_api_key') || '';
+            const novaChave = prompt("Insira sua API Key do Google AI Studio (Gemini):\n(Ela ficará salva apenas no seu navegador)", chaveAtual);
             
-            let iconClass = 'fa-robot';
-            if(sender === 'Você') iconClass = 'fa-user';
-            else if(sender === 'Diretor de Virais') iconClass = 'fa-sitemap';
-
-            const colorClass = colorMap[sender] || 'text-white';
-            
-            let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>').replace(/\n/g, '<br>');
-
-            msgDiv.innerHTML = 
-                '<div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0 shadow-inner">' +
-                    '<i class="fa-solid ' + iconClass + ' ' + colorClass + '"></i>' +
-                '</div>' +
-                '<div class="flex-1 min-w-0">' +
-                    '<p class="font-semibold ' + colorClass + ' mb-1">' + sender + '</p>' +
-                    '<div class="text-textMuted leading-relaxed text-[15px] space-y-2">' + formattedText + '</div>' +
-                '</div>';
-            
-            chatBox.appendChild(msgDiv);
-            scrollToBottom();
-        }
-
-        function showTyping(sender) {
-            const msgDiv = document.createElement('div');
-            msgDiv.id = 'typing-indicator';
-            msgDiv.className = 'flex gap-4 p-5 rounded-3xl ios-panel';
-            const colorClass = colorMap[sender] || 'text-white';
-
-            msgDiv.innerHTML = 
-                '<div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">' +
-                    '<i class="fa-solid fa-circle-notch fa-spin ' + colorClass + '"></i>' +
-                '</div>' +
-                '<div class="flex-1 flex flex-col justify-center">' +
-                    '<p class="font-semibold ' + colorClass + ' mb-1 flex items-center gap-2">' + sender + ' está processando dados <span class="typing-indicator flex"><span></span><span></span><span></span></span></p>' +
-                '</div>';
-            
-            chatBox.appendChild(msgDiv);
-            scrollToBottom();
-        }
-
-        function removeTyping() {
-            const el = document.getElementById('typing-indicator');
-            if(el) el.remove();
-        }
-
-        // --- AQUI É O MOTOR QUE FALA COM SEU SERVIDOR RENDER ---
-        async function runAgentCycle(userBriefing) {
-            showTyping('Diretor de Virais'); 
-            
-            // ATENÇÃO: COLE SEU LINK DO RENDER ENTRE AS ASPAS ABAIXO
-            const renderUrl = "[https://backend-viral.onrender.com](https://backend-viral.onrender.com)"
-            try {
-                const response = await fetch(`${renderUrl}/gerar-ideia?tema=${encodeURIComponent(userBriefing)}`, {
-                    method: 'POST',
-                    headers: { 'Accept': 'application/json' }
-                });
-                
-                const result = await response.json();
-                removeTyping();
-
-                if(result.sucesso) {
-                    addMessage('Diretor de Virais', result.ideias);
-                } else {
-                    addMessage('Sistema', '⚠️ Erro na IA: ' + result.erro);
-                }
-
-            } catch(e) {
-                removeTyping();
-                addMessage('Sistema', `⚠️ Problema ao falar com o servidor Render: ${e.message}. O link está certo?`);
-            } finally {
-                isProcessing = false;
+            if (novaChave !== null) {
+                localStorage.setItem('gemini_api_key', novaChave.trim());
+                verificarStatusAPI();
             }
         }
 
-        function handleChatSubmit(e) {
+        function verificarStatusAPI() {
+            const chave = localStorage.getItem('gemini_api_key');
+            const statusDiv = document.getElementById('api-status');
+            if (chave && chave.length > 10) {
+                statusDiv.innerText = 'Chave Configurada';
+                statusDiv.classList.replace('text-base-500', 'text-green-500');
+            } else {
+                statusDiv.innerText = 'Chave Pendente';
+                statusDiv.classList.replace('text-green-500', 'text-base-500');
+            }
+            return chave;
+        }
+
+        // Verifica na inicialização
+        window.addEventListener('DOMContentLoaded', () => {
+            verificarStatusAPI();
+            inputField.focus();
+        });
+
+        function scrollToBottom() {
+            feedBox.scrollTop = feedBox.scrollHeight;
+        }
+
+        function getTimestamp() {
+            const now = new Date();
+            return now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function setAgentStatus(agent, status) {
+            const dot = document.getElementById(`status-${agent}`);
+            if(!dot) return;
+            
+            dot.className = 'w-1.5 h-1.5 rounded-full'; // Reset
+            
+            if(status === 'active') {
+                dot.classList.add('bg-green-500', 'shadow-[0_0_4px_#22c55e]');
+            } else if (status === 'working') {
+                dot.classList.add('bg-blue-500', 'animate-pulse');
+            } else {
+                dot.classList.add('bg-base-300'); // idle
+            }
+        }
+
+        function setSystemState(state) {
+            if (state === 'processing') {
+                headerStatus.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div> Processando';
+            } else {
+                headerStatus.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Ocioso';
+            }
+        }
+
+        function addLogEntry(role, message, isUser = false) {
+            const entry = document.createElement('div');
+            entry.className = 'flex gap-4 group py-2 relative animate-fade-in';
+            
+            const connector = !isUser ? `<div class="absolute left-2.5 top-8 bottom-[-8px] w-[1px] bg-base-200 group-last:hidden"></div>` : '';
+
+            let icon = 'ph-terminal-window';
+            let iconClass = 'text-base-500';
+            
+            if (isUser) {
+                icon = 'ph-user';
+                iconClass = 'text-base-800';
+            } else if (role === 'Diretor') {
+                icon = 'ph-command';
+                setAgentStatus('Diretor', 'active');
+            } else if (role === 'Caçador de Tendências') {
+                icon = 'ph-crosshair';
+                setAgentStatus('Caçador de Tendências', 'active');
+            } else if (role === 'Editor de Retenção') {
+                icon = 'ph-scissors';
+                setAgentStatus('Editor de Retenção', 'active');
+            } else if (role === 'Estrategista') {
+                icon = 'ph-share-network';
+                setAgentStatus('Estrategista', 'active');
+            } else if (role === 'Erro') {
+                icon = 'ph-warning';
+                iconClass = 'text-red-500';
+            }
+
+            // A IA envia HTML pronto (tags p, b, ul, li)
+            let formattedMessage = message;
+            if (isUser) {
+                formattedMessage = `<p>${message.replace(/\n/g, '<br>')}</p>`;
+            }
+
+            entry.innerHTML = `
+                ${connector}
+                <div class="w-5 h-5 rounded flex items-center justify-center ${isUser ? 'bg-base-200 border-base-300' : 'bg-base-100 border-base-200'} border shrink-0 mt-0.5 z-10">
+                    <i class="ph ${icon} ${iconClass} text-[11px]"></i>
+                </div>
+                <div class="flex-1 pb-2">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-xs font-medium ${isUser ? 'text-base-900' : 'text-base-800'}">${role}</span>
+                        <span class="text-[10px] text-base-500 font-mono">${getTimestamp()}</span>
+                    </div>
+                    <div class="text-[13px] ${isUser ? 'text-base-800' : 'text-base-600'} log-content">
+                        ${formattedMessage}
+                    </div>
+                </div>
+            `;
+            
+            feedBox.appendChild(entry);
+            scrollToBottom();
+        }
+
+        let loadingId = null;
+        function showLoading(role) {
+            loadingId = 'loading-' + Date.now();
+            const entry = document.createElement('div');
+            entry.id = loadingId;
+            entry.className = 'flex gap-4 group py-2 relative opacity-70';
+            
+            entry.innerHTML = `
+                <div class="w-5 h-5 rounded flex items-center justify-center bg-base-100 border border-base-200 shrink-0 mt-0.5 z-10">
+                    <i class="ph ph-circle-notch animate-spin text-base-400 text-[11px]"></i>
+                </div>
+                <div class="flex-1 pb-2">
+                    <div class="flex items-center gap-2 mb-0.5">
+                        <span class="text-xs font-medium text-base-600">${role}</span>
+                        <span class="text-[10px] text-base-500 font-mono">${getTimestamp()}</span>
+                    </div>
+                    <div class="text-[13px] text-base-500 animate-processing">
+                        Acessando base de dados e executando funções...
+                    </div>
+                </div>
+            `;
+            feedBox.appendChild(entry);
+            scrollToBottom();
+            setAgentStatus(role, 'working');
+        }
+
+        function removeLoading() {
+            if (loadingId) {
+                const el = document.getElementById(loadingId);
+                if (el) el.remove();
+                loadingId = null;
+            }
+        }
+
+        function resetAllAgents() {
+            ['Diretor', 'Caçador de Tendências', 'Editor de Retenção', 'Estrategista'].forEach(a => setAgentStatus(a, 'idle'));
+            setSystemState('idle');
+        }
+
+        // --- INTEGRAÇÃO REAL COM A API DO GOOGLE ---
+        async function executePipeline(input) {
+            const apiKey = verificarStatusAPI();
+            
+            if (!apiKey) {
+                addLogEntry('Erro', '<p>API Key não encontrada. Clique em "Configurar API" no menu lateral para adicionar sua chave do Gemini e tentar novamente.</p>');
+                isProcessing = false;
+                resetAllAgents();
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Executar';
+                return;
+            }
+
+            setSystemState('processing');
+            showLoading('Cérebro do Sistema');
+            
+            // Usando flash-preview para eficiência e schema handling impecável
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const promptText = `Você é o orquestrador do SaaS 'Viralize.AI', uma agência de inteligência artificial focada em retenção e viralização para streamers.
+Aja através de 4 agentes trabalhando em cadeia para analisar este briefing do usuário: "${input}"
+
+OBRIGAÇÕES ABSOLUTAS:
+1. IDIOMA: Responda ESTRITAMENTE em Português do Brasil (PT-BR).
+2. DADOS REAIS: Use a ferramenta de Busca para descobrir músicas em alta hoje no TikTok, métricas de CPM/RPM atualizadas do Brasil, ou tendências exatas da semana.
+3. PROFUNDIDADE: Não seja genérico. Cite números reais, estratégias psicológicas de retenção e forneça timestamps exatos sugeridos para cortes.
+4. FORMATAÇÃO: O campo 'message' deve conter HTML estruturado. Use <p> para parágrafos, <b> para negritos e <ul><li> para listas. NUNCA use formatação markdown (como **).
+
+AGENTES DA CADEIA:
+1. role: "Diretor", message: Análise do pedido, qual o objetivo principal e qual o tom da campanha.
+2. role: "Caçador de Tendências", message: Traga 2 áudios ou trends REAIS em alta no TikTok ou Reels hoje que encaixam no tema. Cite dados reais e números pesquisados na internet.
+3. role: "Editor de Retenção", message: Forneça um Hook (Gancho) psicológico brutal para os primeiros 3 segundos. Diga exatamente o que focar no frame, onde dar zoom e a estrutura de retenção audiovisual.
+4. role: "Estrategista", message: Entregue as legendas otimizadas, 3 hashtags de alto volume baseadas em SEO atual e previsão real de conversão em visualizações.`;
+
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: promptText }] }],
+                tools: [{ google_search: {} }], // Garante acesso à web em tempo real
+                generationConfig: {
+                    temperature: 0.5,
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                role: { type: "STRING", description: "Nome do Agente (Diretor, Caçador de Tendências, Editor de Retenção, Estrategista)" },
+                                message: { type: "STRING", description: "Conteúdo denso e profissional formatado estritamente com tags HTML (<p>, <b>, <ul>, <li>)" }
+                            },
+                            required: ["role", "message"]
+                        }
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                removeLoading();
+
+                if (response.ok && result.candidates && result.candidates.length > 0) {
+                    const rawText = result.candidates[0].content.parts[0].text;
+                    let processSteps = JSON.parse(rawText);
+
+                    // Renderização fluida simulando o trabalho da equipe
+                    for(let i = 0; i < processSteps.length; i++) {
+                        const step = processSteps[i];
+                        if(step.role && step.message) {
+                            showLoading(step.role);
+                            const delay = Math.floor(Math.random() * 2000) + 1500; // Simula o tempo de análise de cada agente
+                            await new Promise(r => setTimeout(r, delay));
+                            removeLoading();
+                            addLogEntry(step.role, step.message);
+                        }
+                    }
+                    
+                    await new Promise(r => setTimeout(r, 800));
+                    addLogEntry('Sistema', '<p>Processamento concluído. O pipeline gerou as diretrizes. A exportação do pacote final (VOD cortado + Copy) está pronta para ser enviada ao módulo de Automação.</p>');
+                    
+                } else {
+                    const errorMsg = result.error ? result.error.message : 'Falha na resposta da infraestrutura de IA.';
+                    addLogEntry('Erro', `<p>Ocorreu um erro no servidor:<br>${errorMsg}</p>`);
+                }
+            } catch (error) {
+                removeLoading();
+                addLogEntry('Erro', `<p>Falha crítica na conexão ou limite de uso excedido. Verifique sua conexão e sua chave API. Detalhes: ${error.message}</p>`);
+            } finally {
+                isProcessing = false;
+                inputField.disabled = false;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Executar';
+                resetAllAgents();
+                inputField.focus();
+            }
+        }
+
+        function handleProcessSubmit(e) {
             e.preventDefault();
             if(isProcessing) return;
 
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
+            const text = inputField.value.trim();
             if(!text) return;
 
-            input.value = '';
-            addMessage('Você', text);
+            inputField.value = '';
+            inputField.disabled = true;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="ph ph-circle-notch animate-spin"></i>';
+            
+            addLogEntry('Você', text, true);
             isProcessing = true;
+            resetAllAgents();
 
-            runAgentCycle(text);
+            executePipeline(text);
         }
     </script>
 </body>
