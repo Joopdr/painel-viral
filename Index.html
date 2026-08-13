@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Time de Viralização</title>
+    
+    <!-- Carregando Tailwind PRIMEIRO -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configuração do Tailwind -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#0A84FF', // Blue iOS
+                        primaryHover: '#007AFF',
+                        background: '#000000', 
+                        textMain: '#FFFFFF',   
+                        textMuted: '#EBEBF599' // Secondary label iOS
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Outras Bibliotecas -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Fundo Animado iOS/macOS */
+        body {
+            font-family: '-apple-system', 'BlinkMacSystemFont', 'Inter', sans-serif;
+            background: radial-gradient(circle at top right, #1f1b3b, #000000 50%),
+                        radial-gradient(circle at bottom left, #0e1830, #000000 50%);
+            background-color: #000000;
+            background-attachment: fixed;
+            color: theme('colors.textMain');
+        }
+        
+        /* Scrollbar elegante */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+
+        /* iOS Glassmorphism Base */
+        .ios-glass {
+            background: rgba(30, 30, 35, 0.45);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+        }
+        
+        /* Glass para cards internos */
+        .ios-panel {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: #0A84FF;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.4); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="h-screen w-full flex overflow-hidden text-sm selection:bg-blue-500/30 p-4 gap-4">
+
+    <!-- === SIDEBAR FLUTUANTE === -->
+    <nav class="w-64 ios-glass rounded-[2rem] flex flex-col justify-between h-full z-20 shrink-0 overflow-hidden">
+        <div>
+            <!-- Logotipo -->
+            <div class="p-6 flex items-center gap-3 border-b border-white/5">
+                <div class="w-10 h-10 rounded-[14px] bg-gradient-to-br from-blue-500 to-indigo-500 text-white flex items-center justify-center shadow-md">
+                    <i class="fa-solid fa-layer-group text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-textMain tracking-tight text-lg">Viralize.AI</h1>
+                    <p class="text-[11px] text-textMuted font-medium mt-0.5">Gestão iOS-Style</p>
+                </div>
+            </div>
+
+            <!-- Navegação -->
+            <div class="p-4 space-y-2" id="nav-menu">
+                <button onclick="switchTab('operacoes')" id="tab-operacoes" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/10 text-white font-medium transition-all shadow-sm">
+                    <i class="fa-solid fa-message w-5 text-center"></i> Sala de Guerra
+                </button>
+                <button onclick="switchTab('analytics')" id="tab-analytics" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-textMuted hover:bg-white/5 hover:text-white font-medium transition-all">
+                    <i class="fa-solid fa-chart-pie w-5 text-center"></i> Analytics & ROI
+                </button>
+                <button onclick="switchTab('video-lab')" id="tab-video-lab" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-textMuted hover:bg-white/5 hover:text-white font-medium transition-all">
+                    <i class="fa-solid fa-film w-5 text-center"></i> Edição IA
+                </button>
+                <button onclick="switchTab('equipe')" id="tab-equipe" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-textMuted hover:bg-white/5 hover:text-white font-medium transition-all">
+                    <i class="fa-solid fa-users w-5 text-center"></i> Consultores
+                </button>
+                <button onclick="switchTab('backend')" id="tab-backend" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-textMuted hover:bg-white/5 hover:text-white font-medium transition-all">
+                    <i class="fa-solid fa-server w-5 text-center"></i> Colocar Online
+                </button>
+            </div>
+        </div>
+        
+        <!-- Status -->
+        <div class="p-6 border-t border-white/5 flex items-center gap-3 bg-white/5 backdrop-blur-md">
+            <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+            <span class="text-xs font-medium text-textMuted">API Conectada</span>
+        </div>
+    </nav>
+
+    <!-- === ÁREA PRINCIPAL FLUTUANTE === -->
+    <main class="flex-1 flex flex-col h-full relative ios-glass rounded-[2rem] overflow-hidden">
+        
+        <!-- === VIEW: OPERAÇÕES (CHAT) === -->
+        <section id="view-operacoes" class="flex flex-col h-full absolute inset-0 transition-opacity duration-300">
+            <header class="h-16 border-b border-white/5 flex items-center px-8 shrink-0 bg-white/5 backdrop-blur-md z-10">
+                <h2 class="font-semibold flex items-center gap-2 text-[15px]">
+                    <i class="fa-solid fa-bolt text-blue-400"></i> Orquestração em Tempo Real
+                </h2>
+            </header>
+
+            <div id="chat-box" class="flex-1 overflow-y-auto p-8 space-y-6 pb-32">
+                <div class="flex gap-4 p-5 rounded-3xl ios-panel">
+                    <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-robot text-textMuted"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-white mb-1">Sistema</p>
+                        <p class="text-textMuted leading-relaxed">Painel pronto. Descreva seu vídeo ou ideia. Os agentes farão pesquisas na web para basear as decisões em dados.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Flutuante -->
+            <div class="absolute bottom-6 left-8 right-8 shrink-0">
+                <form id="chat-form" class="relative max-w-4xl mx-auto flex items-end gap-3" onsubmit="handleChatSubmit(event)">
+                    <div class="flex-1 ios-glass rounded-3xl overflow-hidden flex flex-col shadow-2xl">
+                        <textarea id="chat-input" rows="2" class="w-full bg-transparent text-white p-5 focus:outline-none resize-none placeholder:text-white/40" placeholder="Ex: 'Quero postar um clipe da minha live de Valorant de ontem...'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('chat-form').dispatchEvent(new Event('submit')); }"></textarea>
+                    </div>
+                    <button type="submit" id="send-btn" class="h-14 w-14 rounded-full bg-primary text-white font-medium hover:bg-primaryHover transition-colors shadow-lg shadow-blue-500/30 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-arrow-up text-lg"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- === VIEW: ANALYTICS === -->
+        <section id="view-analytics" class="h-full absolute inset-0 overflow-y-auto p-8 hidden opacity-0 transition-opacity duration-300">
+            <div class="max-w-6xl mx-auto">
+                <header class="mb-8 mt-4">
+                    <h2 class="text-3xl font-bold text-white tracking-tight">Tráfego & Projeções</h2>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="ios-panel p-6">
+                        <p class="text-textMuted text-xs font-semibold uppercase tracking-wider mb-2">Alcance Estimado</p>
+                        <h3 class="text-3xl font-bold text-white" id="metric-alcance">--</h3>
+                    </div>
+                    <div class="ios-panel p-6">
+                        <p class="text-textMuted text-xs font-semibold uppercase tracking-wider mb-2">Custo por Clique (CPC)</p>
+                        <h3 class="text-3xl font-bold text-white" id="metric-cpc">--</h3>
+                    </div>
+                    <div class="ios-panel p-6">
+                        <p class="text-textMuted text-xs font-semibold uppercase tracking-wider mb-2">RPM (Média)</p>
+                        <h3 class="text-3xl font-bold text-white" id="metric-rpm">--</h3>
+                    </div>
+                    <div class="ios-panel p-6 border-b-2 border-b-blue-500">
+                        <p class="text-textMuted text-xs font-semibold uppercase tracking-wider mb-2">Conversão Twitch</p>
+                        <h3 class="text-3xl font-bold text-blue-400" id="metric-conv">--</h3>
+                    </div>
+                </div>
+
+                <div class="ios-panel p-6 h-96">
+                    <h3 class="font-medium mb-4">Projeção de Crescimento (7 Dias)</h3>
+                    <div class="h-72 w-full relative">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- === VIEW: VIDEO LAB === -->
+        <section id="view-video-lab" class="h-full absolute inset-0 overflow-y-auto p-8 hidden opacity-0 transition-opacity duration-300">
+            <div class="max-w-6xl mx-auto h-full flex flex-col">
+                <header class="mb-8 mt-4">
+                    <h2 class="text-3xl font-bold text-white tracking-tight">Edição por IA</h2>
+                    <p class="text-textMuted mt-1">Integração FFmpeg + OpusClip simulada.</p>
+                </header>
+
+                <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 pb-8">
+                    <div class="lg:col-span-2 flex flex-col gap-4">
+                        <div class="w-full aspect-video bg-black/50 rounded-3xl border border-white/10 relative overflow-hidden flex items-center justify-center shadow-2xl backdrop-blur-md">
+                            <i class="fa-solid fa-play text-5xl text-white/20"></i>
+                            <div class="absolute bottom-4 left-4 right-4 h-1 bg-white/10 rounded-full overflow-hidden">
+                                <div class="h-full bg-blue-500 w-1/3"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="ios-panel p-6 flex flex-col">
+                        <h3 class="font-semibold mb-4 text-white">Marcadores (Timestamps)</h3>
+                        <div class="flex-1 overflow-y-auto space-y-3" id="video-lab-markers">
+                            <p class="text-textMuted text-sm text-center mt-10">Os cortes da IA aparecerão aqui.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- === VIEW: EQUIPE === -->
+        <section id="view-equipe" class="h-full absolute inset-0 overflow-y-auto p-8 hidden opacity-0 transition-opacity duration-300">
+             <div class="max-w-6xl mx-auto">
+                <header class="mb-8 mt-4">
+                    <h2 class="text-3xl font-bold text-white tracking-tight">Consultores de IA</h2>
+                </header>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="team-grid"></div>
+             </div>
+        </section>
+
+        <!-- === VIEW: BACKEND === -->
+        <section id="view-backend" class="h-full absolute inset-0 overflow-y-auto p-8 hidden opacity-0 transition-opacity duration-300">
+            <div class="max-w-5xl mx-auto">
+                <header class="mb-10 mt-4">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-semibold mb-4 border border-blue-500/20">
+                        <i class="fa-solid fa-rocket"></i> Guia de Deploy Real
+                    </div>
+                    <h2 class="text-3xl font-bold text-white tracking-tight">Como colocar isso online?</h2>
+                    <p class="text-textMuted mt-2 text-[15px] leading-relaxed">Para que as IAs editem seus vídeos de verdade, você precisa conectar este HTML a um servidor Backend. O HTML é só o painel de controle; o servidor é quem fará o "trabalho sujo".</p>
+                </header>
+
+                <div class="space-y-6">
+                    <div class="ios-panel p-8">
+                        <h3 class="font-bold text-xl mb-3 text-white flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm shadow-md">1</span> 
+                            A Arquitetura (Onde hospedar)
+                        </h3>
+                        <p class="text-textMuted mb-4">Você precisará de 3 peças fundamentais:</p>
+                        <ul class="space-y-3 text-sm text-textMuted">
+                            <li class="flex gap-3"><i class="fa-solid fa-globe text-blue-400 mt-1"></i> <span><strong>Frontend (Este Painel):</strong> Hospede de graça na <strong>Vercel</strong> ou <strong>Netlify</strong>. É fácil, basta subir o código HTML.</span></li>
+                            <li class="flex gap-3"><i class="fa-solid fa-server text-purple-400 mt-1"></i> <span><strong>Backend (Servidor Python):</strong> Hospede no <strong>Render.com</strong> (usando Docker). Por que Docker? Porque para cortar vídeos, o servidor precisa do programa `FFmpeg` instalado no sistema operacional, e o Docker permite isso.</span></li>
+                            <li class="flex gap-3"><i class="fa-solid fa-database text-green-400 mt-1"></i> <span><strong>Armazenamento em Nuvem:</strong> Use <strong>Amazon S3</strong>. O seu servidor Python vai baixar a live lá da Twitch, salvar no S3, cortar, e devolver o link final para o Frontend.</span></li>
+                        </ul>
+                    </div>
+
+                    <div class="ios-panel p-8">
+                        <h3 class="font-bold text-xl mb-3 text-white flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-sm shadow-md">2</span> 
+                            Código do Servidor (Python/FastAPI)
+                        </h3>
+                        <p class="text-textMuted mb-4">No Render.com, você rodará este código para que o Gemini leia seu vídeo e o FFmpeg corte as partes boas:</p>
+                        <div class="bg-black/50 p-5 rounded-2xl overflow-x-auto text-sm font-mono text-gray-300 border border-white/5">
+from fastapi import FastAPI
+import google.generativeai as genai
+from moviepy.editor import VideoFileClip
+import json
+
+app = FastAPI()
+genai.configure(api_key="SUA_CHAVE_GEMINI_AQUI")
+
+@app.post("/cortar-video-viral")
+async def gerar_cortes(video_url: str):
+    # 1. IA analisa o video inteiro e acha os minutos de ouro
+    prompt = "Retorne um JSON com os tempos (início e fim) da melhor jogada."
+    model = genai.GenerativeModel("gemini-1.5-pro")
+    ia_resposta = model.generate_content([video_url, prompt])
+    dados = json.loads(ia_resposta.text)
+
+    # 2. MoviePy (usando FFmpeg) corta fisicamente o vídeo
+    video = VideoFileClip(video_url)
+    corte = video.subclip(dados['inicio'], dados['fim'])
+    
+    # 3. Crop vertical 9:16 para TikTok
+    (w, h) = corte.size
+    corte_vertical = corte.crop(x1=w/2 - (h*9/16)/2, width=h*9/16)
+    
+    corte_vertical.write_videofile("pronto_pro_tiktok.mp4", codec="libx264")
+    return {"status": "sucesso", "arquivo": "pronto_pro_tiktok.mp4"}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // === 1. DADOS DA EQUIPE ===
+        const agentsConfig = [
+            { id: 'diretor', name: 'Diretor de Virais', icon: 'fa-sitemap', color: 'text-indigo-400', desc: 'Orquestrador. Recebe o briefing, define a estratégia geral e delega tarefas. Avalia o trabalho dos outros antes de finalizar.' },
+            { id: 'cacador', name: 'Caçador de Tendências', icon: 'fa-radar', color: 'text-pink-400', desc: 'Usa navegação real para buscar trends atuais no TikTok e Reels, músicas em alta e formatos de memes que estão funcionando hoje.' },
+            { id: 'designer', name: 'Designer de Thumbnails', icon: 'fa-image', color: 'text-yellow-400', desc: 'Cria prompts visuais precisos (Midjourney/Flux) para criar capas magnéticas para o YouTube Shorts e Reels.' },
+            { id: 'editor', name: 'Editor de Retenção', icon: 'fa-scissors', color: 'text-blue-400', desc: 'Foca 100% na retenção de público. Decide onde cortar, onde dar zoom, onde colocar legendas e SFX para evitar que o usuário role a tela.' },
+            { id: 'estrategista', name: 'Estrategista Social', icon: 'fa-pen-nib', color: 'text-emerald-400', desc: 'Copywriter avançado. Escreve legendas, cria CTAs eficientes e planeja hashtags focadas em conversão (levar pro canal da Twitch).' },
+            { id: 'gestor', name: 'Gestor de Tráfego', icon: 'fa-bullseye', color: 'text-orange-400', desc: 'Configura orçamentos, segmentação de público (idade, interesses em games) e lida com Meta Ads / TikTok Ads para impulsionar os cortes.' },
+            { id: 'analista', name: 'Analista de Monetização', icon: 'fa-money-bill-wave', color: 'text-cyan-400', desc: 'Busca dados reais sobre RPM de nicho, viabilidade de patrocínios e avalia o Retorno sobre Investimento (ROI) da campanha.' }
+        ];
+
+        const colorMap = {
+            'Sistema': 'text-textMuted',
+            'Você': 'text-white'
+        };
+        agentsConfig.forEach(a => { colorMap[a.name] = a.color; });
+
+        // === 2. INICIALIZAÇÃO DA UI ===
+        function renderTeam() {
+            const grid = document.getElementById('team-grid');
+            let html = '';
+            agentsConfig.forEach(agent => {
+                html += '<div class="ios-panel p-6 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors">' +
+                            '<div class="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center mb-4">' +
+                                '<i class="fa-solid ' + agent.icon + ' text-xl ' + agent.color + '"></i>' +
+                            '</div>' +
+                            '<h3 class="font-bold text-lg text-white mb-2">' + agent.name + '</h3>' +
+                            '<p class="text-textMuted text-sm leading-relaxed">' + agent.desc + '</p>' +
+                        '</div>';
+            });
+            grid.innerHTML = html;
+        }
+
+        function switchTab(tabId) {
+            const sections = ['operacoes', 'analytics', 'video-lab', 'equipe', 'backend'];
+            sections.forEach(sec => {
+                const view = document.getElementById('view-' + sec);
+                const tab = document.getElementById('tab-' + sec);
+                if(view) {
+                    if (sec === tabId) {
+                        view.classList.remove('hidden');
+                        setTimeout(() => view.classList.remove('opacity-0'), 10);
+                    } else {
+                        view.classList.add('hidden', 'opacity-0');
+                    }
+                }
+                if(tab) {
+                    if (sec === tabId) {
+                        tab.classList.add('bg-white/10', 'text-white');
+                        tab.classList.remove('text-textMuted');
+                    } else {
+                        tab.classList.remove('bg-white/10', 'text-white');
+                        tab.classList.add('text-textMuted');
+                    }
+                }
+            });
+
+            if(tabId === 'analytics' && !window.myChart) {
+                initChart();
+            }
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('growthChart');
+            if(!ctx) return;
+            
+            Chart.defaults.color = '#a1a1aa';
+            Chart.defaults.font.family = 'Inter';
+
+            window.myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                    datasets: [{
+                        label: 'Views Acumuladas',
+                        data: [1000, 3500, 12000, 35000, 80000, 150000, 280000],
+                        borderColor: '#0A84FF',
+                        backgroundColor: 'rgba(10, 132, 255, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#000000',
+                        pointBorderColor: '#0A84FF',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // === 3. LÓGICA DO CHAT E SIMULAÇÃO DE AGENTES ===
+        const chatBox = document.getElementById('chat-box');
+        let isProcessing = false;
+
+        function scrollToBottom() {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function addMessage(sender, text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'flex gap-4 p-5 rounded-3xl ' + (sender === 'Você' ? 'bg-blue-500/20 border border-blue-500/30' : 'ios-panel');
+            
+            let iconClass = 'fa-robot';
+            if(sender === 'Você') iconClass = 'fa-user';
+            else {
+                const ag = agentsConfig.find(a => a.name === sender);
+                if(ag) iconClass = ag.icon;
+            }
+
+            const colorClass = colorMap[sender] || 'text-white';
+            
+            let formattedText = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+                .replace(/\n- /g, '<br>• ')
+                .replace(/\n/g, '<br>');
+
+            msgDiv.innerHTML = 
+                '<div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0 shadow-inner">' +
+                    '<i class="fa-solid ' + iconClass + ' ' + colorClass + '"></i>' +
+                '</div>' +
+                '<div class="flex-1 min-w-0">' +
+                    '<p class="font-semibold ' + colorClass + ' mb-1">' + sender + '</p>' +
+                    '<div class="text-textMuted leading-relaxed text-[15px] space-y-2">' + formattedText + '</div>' +
+                '</div>';
+            
+            chatBox.appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        function showTyping(sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.id = 'typing-indicator';
+            msgDiv.className = 'flex gap-4 p-5 rounded-3xl ios-panel';
+            const colorClass = colorMap[sender] || 'text-white';
+
+            msgDiv.innerHTML = 
+                '<div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">' +
+                    '<i class="fa-solid fa-circle-notch fa-spin ' + colorClass + '"></i>' +
+                '</div>' +
+                '<div class="flex-1 flex flex-col justify-center">' +
+                    '<p class="font-semibold ' + colorClass + ' mb-1 flex items-center gap-2">' + sender + ' está processando dados <span class="typing-indicator flex"><span></span><span></span><span></span></span></p>' +
+                '</div>';
+            
+            chatBox.appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        function removeTyping() {
+            const el = document.getElementById('typing-indicator');
+            if(el) el.remove();
+        }
+
+        async function runAgentCycle(userBriefing) {
+            // Atualiza Dashboard para Carregando
+            const metricEls = ['metric-alcance', 'metric-cpc', 'metric-rpm', 'metric-conv'];
+            metricEls.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-sm text-zinc-500"></i>';
+            });
+
+            showTyping('Diretor de Virais'); 
+            
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const prompt = `Você orquestra uma equipe IA de marketing viral para streamers.
+            O usuário enviou este briefing: "${userBriefing}"
+            
+            OBRIGATÓRIO: Use a ferramenta Google Search para basear a resposta em DADOS REAIS DE HOJE.
+            Retorne ESTRITAMENTE uma array JSON válida com objetos { "agent": "Nome do Agente", "text": "Mensagem" }.
+            
+            Membros obrigatórios a responder (nessa ordem):
+            1. Diretor de Virais (Analisa).
+            2. Caçador de Tendências (Mostra trends atuais reais pesquisadas).
+            3. Designer de Thumbnails (Sugere visuais focados em CTR).
+            4. Editor de Retenção (Sugere cortes precisos).
+            5. Estrategista Social (Define copy/hashtags).
+            6. Analista de Monetização (Informa RPM real pesquisado e expectativas).
+            
+            SEM blocos markdown tipo \`\`\`json em volta. Somente o JSON.`;
+
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                tools: [{ "google_search": {} }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                agent: { type: "STRING" },
+                                text: { type: "STRING" }
+                            },
+                            required: ["agent", "text"]
+                        }
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                removeTyping();
+
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content) {
+                    let jsonStr = result.candidates[0].content.parts[0].text;
+                    jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
+                    
+                    let steps;
+                    try {
+                        steps = JSON.parse(jsonStr);
+                    } catch (parseErr) {
+                        throw new Error("A IA retornou dados fora de formato. Tente refazer o briefing.");
+                    }
+
+                    for(let i = 0; i < steps.length; i++) {
+                        const agentData = steps[i];
+                        let agentName = agentsConfig.find(a => agentData.agent.includes(a.name.split(' ')[0]))?.name || agentData.agent;
+                        
+                        showTyping(agentName);
+                        // Delay visual humano para leitura
+                        const delay = Math.min(4000, 1500 + (agentData.text.length * 8));
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        removeTyping();
+                        addMessage(agentName, agentData.text);
+                    }
+
+                    // Preenche Dashboard de conclusão com Dados Estimados
+                    document.getElementById('metric-alcance').innerHTML = 'Calculando...';
+                    document.getElementById('metric-cpc').innerHTML = 'R$ 0.12 - 0.25';
+                    document.getElementById('metric-rpm').innerHTML = 'Monitorando';
+                    document.getElementById('metric-conv').innerHTML = '+5.2%';
+
+                } else {
+                    throw new Error("Resposta vazia do servidor.");
+                }
+
+            } catch(e) {
+                removeTyping();
+                console.error("Erro na API:", e);
+                addMessage('Sistema', `⚠️ Ocorreu um problema: ${e.message}. O sistema foi destravado.`);
+            } finally {
+                // Impede travamentos permanentes liberando o chat
+                isProcessing = false;
+            }
+        }
+
+        function handleChatSubmit(e) {
+            e.preventDefault();
+            if(isProcessing) return;
+
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if(!text) return;
+
+            input.value = '';
+            addMessage('Você', text);
+            isProcessing = true;
+
+            runAgentCycle(text);
+        }
+
+        window.onload = function() {
+            renderTeam();
+        };
+
+    </script>
+</body>
+</html>
