@@ -471,13 +471,35 @@ async def gerar_cortes(video_url: str):
             if(el) el.remove();
         }
 
-        async function runAgentCycle(userBriefing) {
-            // Atualiza Dashboard para Carregando
-            const metricEls = ['metric-alcance', 'metric-cpc', 'metric-rpm', 'metric-conv'];
-            metricEls.forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-sm text-zinc-500"></i>';
-            });
+           async function runAgentCycle(userBriefing) {
+            showTyping('Diretor de Virais'); 
+            
+            // ATENÇÃO: COLE O LINK DO SEU RENDER AQUI DENTRO DAS ASPAS
+            const renderUrl = "https://backend-viral.onrender.com"; 
+
+            try {
+                // Aqui o seu site chama o seu servidor Python!
+                const response = await fetch(`${renderUrl}/gerar-ideia?tema=${encodeURIComponent(userBriefing)}`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                const result = await response.json();
+                removeTyping();
+
+                if(result.sucesso) {
+                    addMessage('Diretor de Virais', result.ideias);
+                } else {
+                    addMessage('Sistema', '⚠️ Erro na IA: ' + result.erro);
+                }
+
+            } catch(e) {
+                removeTyping();
+                addMessage('Sistema', `⚠️ Ocorreu um problema de conexão com o servidor: ${e.message}`);
+            } finally {
+                isProcessing = false;
+            }
+        }
 
             showTyping('Diretor de Virais'); 
             
