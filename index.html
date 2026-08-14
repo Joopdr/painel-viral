@@ -1,24 +1,28 @@
-<!DOCTYPE html>
+DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Viralize.AI 2.0 | Workspace</title>
+    <title>Viralize.AI | Workspace</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
+ 
         :root {
             --bg-base: #09090b;
+            --surface-0: #09090b;
+            --surface-1: #101012;
+            --surface-2: #18181b;
             --border-subtle: #27272a;
             --glass-soft: rgba(255, 255, 255, 0.03);
             --glass-premium: rgba(255, 255, 255, 0.05);
             --text-main: #f4f4f5;
             --text-muted: #a1a1aa;
-            --accent: #10b981; /* Emerald/Success */
+            --accent: #10b981;
         }
-
+ 
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-base);
@@ -26,514 +30,2127 @@
             margin: 0;
             overflow: hidden;
         }
-
-        /* Glassmorphism System */
+ 
         .glass-panel {
             background: var(--glass-soft);
             border: 1px solid var(--border-subtle);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
-
+ 
         .glass-card {
             background: var(--glass-premium);
             border: 1px solid var(--border-subtle);
             border-radius: 12px;
         }
-
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-subtle);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #3f3f46;
-        }
-
-        /* Log Feed Animations */
+ 
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+ 
         @keyframes fadeInLog {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
-        .log-entry {
-            animation: fadeInLog 0.4s ease-out forwards;
-        }
-
+        .log-entry { animation: fadeInLog 0.4s ease-out forwards; }
+ 
         .status-dot {
-            height: 8px;
-            width: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            background-color: var(--text-muted);
+            height: 8px; width: 8px; border-radius: 50%;
+            display: inline-block; background-color: #3f3f46;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            flex-shrink: 0;
         }
-        .status-dot.active {
-            background-color: var(--accent);
-            box-shadow: 0 0 8px var(--accent);
+        .status-dot.working { background-color: #eab308; box-shadow: 0 0 6px rgba(234,179,8,.5); }
+        .status-dot.done { background-color: var(--accent); }
+        .status-dot.error { background-color: #ef4444; }
+        .status-dot.online { background-color: var(--accent); }
+ 
+        .view-section { display: none; height: 100%; flex-direction: column; min-height: 0; }
+        .view-section.active { display: flex; animation: fadeInLog 0.25s ease-out forwards; }
+ 
+        .nav-link {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.5rem; border-radius: 0.5rem;
+            font-size: 0.875rem; color: #a1a1aa;
+            border: 1px solid transparent;
+            transition: color 0.15s ease, background-color 0.15s ease;
         }
-
-        /* View Transitions */
-        .view-section {
-            display: none;
-            height: 100%;
-            flex-direction: column;
+        .nav-link:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .nav-link.active {
+            color: #f4f4f5;
+            background: rgba(255,255,255,0.06);
+            border-color: var(--border-subtle);
         }
-        .view-section.active {
-            display: flex;
-            animation: fadeInLog 0.3s ease-out forwards;
+        .nav-link.active .nav-icon { color: var(--accent); }
+ 
+        :focus-visible { outline: 2px solid rgba(16,185,129,.6); outline-offset: 2px; border-radius: 4px; }
+ 
+        .timeline-track {
+            position: relative; height: 56px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px; cursor: pointer;
+            overflow: hidden;
+        }
+        .timeline-segment {
+            position: absolute; top: 8px; bottom: 8px;
+            background: rgba(16,185,129,.18);
+            border: 1px solid rgba(16,185,129,.55);
+            border-radius: 4px; cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .timeline-segment:hover, .timeline-segment.selected { background: rgba(16,185,129,.32); }
+        .timeline-playhead {
+            position: absolute; top: 0; bottom: 0; width: 1.5px;
+            background: #f4f4f5; pointer-events: none;
+        }
+ 
+        .btn-primary {
+            background: var(--accent); color: #09090b; font-weight: 600;
+            border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem;
+            transition: filter .15s ease;
+        }
+        .btn-primary:hover { filter: brightness(1.08); }
+        .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+        .btn-secondary {
+            background: var(--surface-2); color: #e4e4e7; font-weight: 500;
+            border: 1px solid #3f3f46; border-radius: 0.5rem;
+            padding: 0.5rem 1rem; font-size: 0.875rem;
+            transition: background .15s ease;
+        }
+        .btn-secondary:hover { background: #27272a; }
+        .btn-secondary:disabled { opacity: .45; cursor: not-allowed; }
+ 
+        .agent-avatar {
+            width: 24px; height: 24px; border-radius: 6px;
+            background: var(--surface-2); border: 1px solid var(--border-subtle);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 4px;
+        }
+ 
+        #toastArea { position: fixed; bottom: 24px; right: 24px; z-index: 100; display: flex; flex-direction: column; gap: 8px; }
+        .toast {
+            background: var(--surface-2); border: 1px solid #3f3f46;
+            border-radius: 10px; padding: 10px 14px;
+            font-size: 13px; color: #e4e4e7;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.5);
+            animation: fadeInLog .25s ease-out;
+            max-width: 360px;
+        }
+ 
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
     </style>
 </head>
 <body class="h-screen w-screen flex">
-
+ 
     <!-- SIDEBAR -->
     <aside class="w-64 glass-panel border-r border-[#27272a] h-full flex flex-col justify-between p-4 z-10 relative shrink-0">
-        <div>
-            <div class="flex items-center gap-3 mb-10 px-2">
+        <div class="overflow-y-auto">
+            <div class="flex items-center gap-3 mb-8 px-2">
                 <div class="w-8 h-8 rounded-lg bg-[#18181b] border border-[#27272a] flex items-center justify-center">
-                    <i class="ph ph-lightning text-emerald-500 text-lg"></i>
+                    <i class="ph ph-lightning text-emerald-500 text-lg" aria-hidden="true"></i>
                 </div>
                 <div>
                     <h1 class="text-sm font-semibold tracking-wide text-white">Viralize.AI</h1>
                     <p class="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">Workspace</p>
                 </div>
             </div>
-
+ 
             <div class="mb-8">
                 <p class="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-3 px-2">Plataforma</p>
-                <nav class="space-y-1">
-                    <a href="#" class="flex items-center gap-3 px-2 py-2 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/5 transition-colors">
-                        <i class="ph ph-squares-four text-lg"></i> Home
-                    </a>
-                    <a href="#" id="nav-war-room" class="nav-link active flex items-center gap-3 px-2 py-2 rounded-lg text-sm text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 transition-colors">
-                        <i class="ph ph-crosshair text-lg"></i> War Room
-                    </a>
-                    <a href="#" id="nav-video-lab" class="nav-link flex items-center gap-3 px-2 py-2 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/5 transition-colors">
-                        <i class="ph ph-film-strip text-lg"></i> Video Lab
-                    </a>
-                    <a href="#" class="flex items-center gap-3 px-2 py-2 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/5 transition-colors opacity-50 cursor-not-allowed">
-                        <i class="ph ph-folder text-lg"></i> Biblioteca
-                        <span class="ml-auto text-[9px] bg-zinc-800 px-2 py-0.5 rounded text-zinc-400">Em breve</span>
-                    </a>
-                    <a href="#" class="flex items-center gap-3 px-2 py-2 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/5 transition-colors">
-                        <i class="ph ph-chart-line-up text-lg"></i> Analytics
-                    </a>
+                <nav class="space-y-1" aria-label="Navegação principal">
+                    <a href="#" class="nav-link" data-view="home"><i class="ph ph-squares-four text-lg nav-icon" aria-hidden="true"></i> Visão Geral</a>
+                    <a href="#" class="nav-link active" data-view="war-room"><i class="ph ph-crosshair text-lg nav-icon" aria-hidden="true"></i> Sala de Guerra</a>
+                    <a href="#" class="nav-link" data-view="video-lab"><i class="ph ph-film-strip text-lg nav-icon" aria-hidden="true"></i> Video Lab</a>
+                    <a href="#" class="nav-link" data-view="meme-lab"><i class="ph ph-image-square text-lg nav-icon" aria-hidden="true"></i> Meme Lab</a>
+                    <a href="#" class="nav-link" data-view="library"><i class="ph ph-folder text-lg nav-icon" aria-hidden="true"></i> Biblioteca<span id="libraryCount" class="ml-auto text-[10px] text-zinc-500"></span></a>
+                    <a href="#" class="nav-link" data-view="calendar"><i class="ph ph-calendar-blank text-lg nav-icon" aria-hidden="true"></i> Calendário</a>
+                    <a href="#" class="nav-link" data-view="analytics"><i class="ph ph-chart-line-up text-lg nav-icon" aria-hidden="true"></i> Analytics</a>
                 </nav>
             </div>
-
+ 
+            <div class="mb-8">
+                <p class="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-3 px-2">Conta</p>
+                <nav class="space-y-1" aria-label="Conta">
+                    <a href="#" class="nav-link" data-view="plan"><i class="ph ph-credit-card text-lg nav-icon" aria-hidden="true"></i> Plano<span class="ml-auto text-[10px] text-emerald-500" id="planBadge"></span></a>
+                </nav>
+            </div>
+ 
             <div>
                 <p class="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-3 px-2">AI Team</p>
-                <div class="space-y-2 px-2">
-                    <div class="flex items-center gap-2 text-xs text-zinc-300">
-                        <span class="status-dot active"></span> Director
-                    </div>
-                    <div class="flex items-center gap-2 text-xs text-zinc-300">
-                        <span class="status-dot"></span> Trend Hunter
-                    </div>
-                    <div class="flex items-center gap-2 text-xs text-zinc-300">
-                        <span class="status-dot"></span> Retention Editor
-                    </div>
-                    <div class="flex items-center gap-2 text-xs text-zinc-300">
-                        <span class="status-dot"></span> Strategist
-                    </div>
-                </div>
+                <div class="space-y-2 px-2" id="agentStatusList"></div>
             </div>
         </div>
-
+ 
         <div class="mt-auto pt-4 border-t border-[#27272a]">
             <div class="flex items-center gap-3 px-2">
                 <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
-                    <i class="ph ph-user text-zinc-400"></i>
+                    <i class="ph ph-user text-zinc-400" aria-hidden="true"></i>
                 </div>
-                <div>
-                    <p class="text-xs font-medium text-white">Creator</p>
-                    <p class="text-[10px] text-emerald-500">Plano PRO</p>
+                <div class="min-w-0">
+                    <p class="text-xs font-medium text-white truncate" id="userName">Creator</p>
+                    <p class="text-[10px] text-zinc-500 truncate" id="userSub">Sessão local</p>
                 </div>
-                <button id="btnConfigApi" class="ml-auto text-zinc-500 hover:text-white" title="Configurar API">
-                    <i class="ph ph-gear text-lg"></i>
+                <button id="btnLogout" class="ml-auto text-zinc-500 hover:text-white hidden" title="Sair" aria-label="Sair">
+                    <i class="ph ph-sign-out text-lg" aria-hidden="true"></i>
+                </button>
+                <button id="btnSettings" class="ml-auto text-zinc-500 hover:text-white" title="Configurações" aria-label="Configurações">
+                    <i class="ph ph-gear text-lg" aria-hidden="true"></i>
                 </button>
             </div>
         </div>
     </aside>
-
+ 
     <!-- MAIN CONTENT AREA -->
-    <main class="flex-1 relative z-0">
-        
-        <!-- ================= WAR ROOM VIEW ================= -->
-        <section id="view-war-room" class="view-section active">
-            <!-- Header -->
+    <main class="flex-1 relative z-0 min-w-0">
+ 
+        <!-- ================= HOME ================= -->
+        <section id="view-home" class="view-section">
             <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
-                <h2 class="text-sm font-medium text-zinc-200">System Log / Activity Feed</h2>
+                <h2 class="text-sm font-medium text-zinc-200" id="homeGreeting">Visão Geral</h2>
+            </header>
+            <div class="flex-1 overflow-y-auto p-8">
+                <div class="max-w-4xl mx-auto">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-px bg-[#27272a] border border-[#27272a] rounded-xl overflow-hidden mb-10">
+                        <div class="bg-[#101012] p-5">
+                            <p class="text-[11px] text-zinc-500 uppercase tracking-wider mb-1">Briefings analisados</p>
+                            <p class="text-2xl font-semibold text-white" id="statBriefings">0</p>
+                        </div>
+                        <div class="bg-[#101012] p-5">
+                            <p class="text-[11px] text-zinc-500 uppercase tracking-wider mb-1">Clips na biblioteca</p>
+                            <p class="text-2xl font-semibold text-white" id="statClips">0</p>
+                        </div>
+                        <div class="bg-[#101012] p-5">
+                            <p class="text-[11px] text-zinc-500 uppercase tracking-wider mb-1">Publicações planejadas</p>
+                            <p class="text-2xl font-semibold text-white" id="statScheduled">0</p>
+                        </div>
+                    </div>
+ 
+                    <div class="mb-10">
+                        <h3 class="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-4">Próximo passo</h3>
+                        <div id="homeNextStep" class="text-sm text-zinc-300"></div>
+                    </div>
+ 
+                    <div>
+                        <h3 class="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-4">Atividade recente</h3>
+                        <div id="homeActivity" class="divide-y divide-[#1f1f23] border-t border-b border-[#1f1f23]"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+ 
+        <!-- ================= WAR ROOM ================= -->
+        <section id="view-war-room" class="view-section active">
+            <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
+                <h2 class="text-sm font-medium text-zinc-200">Sala de Guerra</h2>
                 <div class="ml-auto flex items-center gap-4">
                     <div class="text-xs text-zinc-500 flex items-center gap-2">
-                        <span class="relative flex h-2 w-2">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                        </span>
-                        Engine: OpenRouter / Free
+                        <span class="status-dot" id="engineDot"></span>
+                        <span id="engineLabel">Engine não configurada</span>
                     </div>
                 </div>
             </header>
-
-            <!-- Log Area (Chat Feed) -->
-            <div id="chatFeed" class="flex-1 overflow-y-auto p-6 space-y-6">
-                <!-- Default Welcome Log -->
+ 
+            <div id="chatFeed" class="flex-1 overflow-y-auto p-6 space-y-5">
                 <div class="log-entry">
                     <div class="flex items-start gap-3">
-                        <div class="w-6 h-6 rounded bg-[#18181b] border border-[#27272a] flex items-center justify-center mt-1">
-                            <i class="ph ph-terminal-window text-zinc-400 text-xs"></i>
-                        </div>
+                        <div class="agent-avatar"><i class="ph ph-terminal-window text-zinc-400 text-xs" aria-hidden="true"></i></div>
                         <div class="flex-1 glass-card p-4">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">System.Init</span>
+                                <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Sistema</span>
                                 <span class="text-[10px] text-zinc-600">Agora</span>
                             </div>
                             <div class="text-sm text-zinc-400 leading-relaxed">
-                                A Sala de Guerra está online. Todos os agentes foram inicializados e estão aguardando o seu briefing. O que vamos processar hoje?
+                                A equipe está pronta. Descreva o conteúdo que você gravou — jogo, contexto, o que aconteceu — e cada especialista vai analisar e devolver um plano de cortes e publicação.
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Input Area -->
+ 
             <div class="p-6 glass-panel border-t border-[#27272a] z-10 shrink-0">
                 <div class="max-w-4xl mx-auto relative flex items-end gap-3">
-                    <textarea id="userInput" rows="1" class="w-full bg-[#18181b] border border-[#27272a] rounded-xl py-3 px-4 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 resize-none transition-colors" placeholder="Envie seu briefing, link da Twitch ou ideia..."></textarea>
-                    <button id="sendBtn" class="h-[46px] px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-semibold transition-colors flex items-center justify-center">
-                        <i class="ph ph-paper-plane-right text-lg"></i>
+                    <textarea id="userInput" rows="1" class="w-full bg-[#18181b] border border-[#27272a] rounded-xl py-3 px-4 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 resize-none transition-colors" placeholder="Envie seu briefing. Ex.: fiz um clutch 1v4 de Valorant, reação ao vivo, chat explodiu..." aria-label="Briefing"></textarea>
+                    <button id="sendBtn" class="h-[46px] px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-semibold transition-colors flex items-center justify-center" aria-label="Enviar briefing">
+                        <i class="ph ph-paper-plane-right text-lg" aria-hidden="true"></i>
                     </button>
                 </div>
-                <div class="max-w-4xl mx-auto mt-2 text-center">
-                    <p class="text-[10px] text-zinc-600">A equipe de IA pode demorar alguns segundos para compilar os dados completos. Pressione Shift + Enter para quebrar linha.</p>
+                <div class="max-w-4xl mx-auto mt-2">
+                    <p class="text-[10px] text-zinc-600">Os agentes trabalham em sequência e cada um leva alguns segundos. Shift + Enter quebra linha.</p>
                 </div>
             </div>
         </section>
-
-        <!-- ================= VIDEO LAB VIEW ================= -->
-        <section id="view-video-lab" class="view-section bg-[#09090b]">
+ 
+        <!-- ================= VIDEO LAB ================= -->
+        <section id="view-video-lab" class="view-section">
             <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
-                <h2 class="text-sm font-medium text-zinc-200">Video Lab Workstation</h2>
+                <h2 class="text-sm font-medium text-zinc-200">Video Lab</h2>
                 <div class="ml-auto flex items-center gap-4">
-                    <div class="text-xs text-zinc-500 flex items-center gap-2">
-                        <i class="ph ph-hard-drives text-emerald-500"></i>
-                        Render Backend Offline (Standby)
+                    <div class="text-xs text-zinc-500 flex items-center gap-2" id="renderStatus">
+                        <span class="status-dot" id="renderDot"></span>
+                        <span id="renderLabel">Servidor de render: não verificado</span>
                     </div>
                 </div>
             </header>
-
-            <div class="flex-1 p-6 overflow-y-auto flex flex-col items-center justify-center">
-                
-                <div class="w-full max-w-2xl glass-card p-10 flex flex-col items-center justify-center border-dashed border-2 border-[#27272a] hover:border-emerald-500/50 transition-colors cursor-pointer" id="uploadZone">
-                    <div class="w-16 h-16 rounded-full bg-zinc-800/50 flex items-center justify-center mb-6">
-                        <i class="ph ph-upload-simple text-3xl text-emerald-500"></i>
+ 
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- Upload / empty state -->
+                <div id="labEmptyState" class="h-full flex flex-col items-center justify-center">
+                    <div class="w-full max-w-2xl glass-card p-10 flex flex-col items-center justify-center border-dashed border-2 border-[#27272a] hover:border-emerald-500/50 transition-colors cursor-pointer" id="uploadZone" role="button" tabindex="0" aria-label="Importar vídeo">
+                        <div class="w-14 h-14 rounded-full bg-zinc-800/50 flex items-center justify-center mb-5">
+                            <i class="ph ph-upload-simple text-2xl text-emerald-500" aria-hidden="true"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white mb-2">Sua próxima viralização começa aqui</h3>
+                        <p class="text-sm text-zinc-400 text-center mb-6">Arraste um vídeo (.mp4, .mov, .webm) ou clique para procurar.<br>A prévia e a marcação de cortes acontecem direto no seu navegador.</p>
+                        <input type="file" id="videoFileInput" accept="video/*" class="hidden">
+                        <button class="btn-secondary" id="btnBrowseVideo">Selecionar arquivo</button>
                     </div>
-                    <h3 class="text-lg font-semibold text-white mb-2">Importar Media Bruta</h3>
-                    <p class="text-sm text-zinc-400 text-center mb-6">Arraste seu arquivo .mp4 para cá ou clique para procurar.<br>O vídeo será enviado para o servidor Render para processamento físico.</p>
-                    
-                    <input type="file" id="videoFileInput" accept="video/mp4,video/x-m4v,video/*" class="hidden">
-                    <button class="px-6 py-2 rounded-lg bg-zinc-800 text-white font-medium hover:bg-zinc-700 transition-colors border border-zinc-700" onclick="document.getElementById('videoFileInput').click()">
-                        Selecionar Arquivo
-                    </button>
                 </div>
-
-                <!-- Painel de Status (Oculto por padrão) -->
-                <div id="uploadStatusPanel" class="w-full max-w-2xl glass-card p-6 mt-6 hidden">
+ 
+                <!-- Workstation -->
+                <div id="labWorkstation" class="hidden max-w-5xl mx-auto">
                     <div class="flex items-center justify-between mb-4">
-                        <span class="text-sm font-medium text-white" id="fileNameDisplay">video.mp4</span>
-                        <span class="text-xs text-emerald-500 font-semibold" id="uploadPercentage">0%</span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-white truncate" id="labFileName"></p>
+                            <p class="text-xs text-zinc-500" id="labFileMeta"></p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="btn-secondary" id="btnUploadToServer" title="Envia o arquivo para o seu backend FastAPI">Enviar ao servidor</button>
+                            <button class="btn-secondary" id="btnNewVideo">Trocar vídeo</button>
+                        </div>
                     </div>
-                    <div class="w-full bg-zinc-900 rounded-full h-1.5 mb-4 border border-zinc-800">
-                        <div class="bg-emerald-500 h-1.5 rounded-full transition-all duration-300" id="uploadProgressBar" style="width: 0%"></div>
+ 
+                    <div class="rounded-xl overflow-hidden border border-[#27272a] bg-black mb-4">
+                        <video id="labVideo" class="w-full max-h-[420px]" controls playsinline></video>
                     </div>
-                    <div class="text-xs text-zinc-500" id="uploadStatusText">Aguardando inicialização da transferência...</div>
+ 
+                    <!-- Upload progress -->
+                    <div id="uploadStatusPanel" class="glass-card p-4 mb-4 hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-medium text-zinc-300" id="uploadStatusText">Preparando envio...</span>
+                            <span class="text-xs text-emerald-500 font-semibold" id="uploadPercentage">0%</span>
+                        </div>
+                        <div class="w-full bg-zinc-900 rounded-full h-1.5 border border-zinc-800">
+                            <div class="bg-emerald-500 h-1.5 rounded-full transition-all duration-300" id="uploadProgressBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+ 
+                    <!-- Timeline -->
+                    <div class="mb-2 flex items-center justify-between">
+                        <p class="text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Timeline</p>
+                        <p class="text-xs text-zinc-500 tabular-nums" id="labTimecode">00:00 / 00:00</p>
+                    </div>
+                    <div class="timeline-track mb-4" id="timelineTrack" aria-label="Timeline do vídeo">
+                        <div class="timeline-playhead" id="timelinePlayhead" style="left:0%"></div>
+                    </div>
+ 
+                    <!-- Controls -->
+                    <div class="flex flex-wrap items-center gap-2 mb-6">
+                        <button class="btn-primary" id="btnFindMoments"><i class="ph ph-magnifying-glass mr-1" aria-hidden="true"></i>Encontrar momentos</button>
+                        <button class="btn-secondary" id="btnMarkIn">Marcar início</button>
+                        <button class="btn-secondary" id="btnMarkOut">Marcar fim</button>
+                        <button class="btn-secondary" id="btnAddSegment" disabled>Adicionar corte manual</button>
+                        <span class="text-xs text-zinc-500 ml-2" id="markInfo"></span>
+                    </div>
+ 
+                    <!-- Context for AI -->
+                    <div class="mb-6">
+                        <label for="labContext" class="block text-[11px] text-zinc-500 uppercase tracking-wider font-semibold mb-2">Contexto para a análise</label>
+                        <textarea id="labContext" rows="2" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 resize-none" placeholder="O que acontece nesse vídeo? Ex.: gameplay de Valorant, clutch aos 12 min, reação forte no final..."></textarea>
+                        <p class="text-[10px] text-zinc-600 mt-1">A análise usa a duração do vídeo e a sua descrição. Transcrição automática de áudio depende do backend e ainda não está ativa.</p>
+                    </div>
+ 
+                    <!-- Segments -->
+                    <div>
+                        <p class="text-[11px] text-zinc-500 uppercase tracking-wider font-semibold mb-3">Cortes sugeridos</p>
+                        <div id="segmentsList" class="space-y-2">
+                            <p class="text-sm text-zinc-600" id="segmentsEmpty">Nenhum corte ainda. Use "Encontrar momentos" ou marque início e fim manualmente.</p>
+                        </div>
+                    </div>
                 </div>
-
             </div>
         </section>
-
+ 
+        <!-- ================= MEME LAB ================= -->
+        <section id="view-meme-lab" class="view-section">
+            <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
+                <h2 class="text-sm font-medium text-zinc-200">Meme Lab</h2>
+                <p class="ml-auto text-xs text-zinc-500">Tudo acontece no seu navegador — nada é enviado para servidores.</p>
+            </header>
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- Empty state -->
+                <div id="memeEmptyState" class="h-full flex flex-col items-center justify-center">
+                    <div class="w-full max-w-2xl glass-card p-10 flex flex-col items-center justify-center border-dashed border-2 border-[#27272a] hover:border-emerald-500/50 transition-colors cursor-pointer" id="memeUploadZone" role="button" tabindex="0" aria-label="Importar imagem">
+                        <div class="w-14 h-14 rounded-full bg-zinc-800/50 flex items-center justify-center mb-5">
+                            <i class="ph ph-image-square text-2xl text-emerald-500" aria-hidden="true"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white mb-2">Transforme um print em meme</h3>
+                        <p class="text-sm text-zinc-400 text-center mb-6">Arraste uma imagem (print de jogo, screenshot, foto) ou clique para procurar.<br>A IA sugere as legendas e o meme é montado aqui mesmo.</p>
+                        <input type="file" id="memeFileInput" accept="image/*" class="hidden">
+                        <button class="btn-secondary" id="btnBrowseMeme">Selecionar imagem</button>
+                    </div>
+                </div>
+ 
+                <!-- Workstation -->
+                <div id="memeWorkstation" class="hidden max-w-5xl mx-auto">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-white truncate" id="memeFileName"></p>
+                            <p class="text-xs text-zinc-500" id="memeFileMeta"></p>
+                        </div>
+                        <button class="btn-secondary" id="btnNewMemeImage">Trocar imagem</button>
+                    </div>
+ 
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                        <div class="lg:col-span-3">
+                            <div class="rounded-xl overflow-hidden border border-[#27272a] bg-black flex items-center justify-center">
+                                <canvas id="memeCanvas" class="w-full h-auto" aria-label="Prévia do meme"></canvas>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-2 space-y-5">
+                            <div>
+                                <label for="memeTopText" class="block text-[11px] text-zinc-500 uppercase tracking-wider font-semibold mb-2">Texto de cima</label>
+                                <input type="text" id="memeTopText" maxlength="90" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50" placeholder="Ex.: quando o mata-mata começa">
+                            </div>
+                            <div>
+                                <label for="memeBottomText" class="block text-[11px] text-zinc-500 uppercase tracking-wider font-semibold mb-2">Texto de baixo</label>
+                                <input type="text" id="memeBottomText" maxlength="90" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50" placeholder="Ex.: e o ping decide subir">
+                            </div>
+                            <div>
+                                <label for="memeContext" class="block text-[11px] text-zinc-500 uppercase tracking-wider font-semibold mb-2">O que aparece na imagem?</label>
+                                <textarea id="memeContext" rows="2" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 resize-none" placeholder="Ex.: personagem olhando para a tela derrotado depois de perder a partida"></textarea>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <label for="memeNiche" class="text-[11px] text-zinc-500">Nicho</label>
+                                    <select id="memeNiche" class="bg-[#18181b] border border-[#27272a] rounded-lg text-xs text-zinc-300 py-1.5 px-2 focus:outline-none">
+                                        <option value="games">Games</option>
+                                        <option value="tech">Tecnologia</option>
+                                        <option value="geral">Geral</option>
+                                    </select>
+                                    <button class="btn-primary ml-auto !py-1.5" id="btnMemeSuggest"><i class="ph ph-sparkle mr-1" aria-hidden="true"></i>Sugerir legendas</button>
+                                </div>
+                                <p class="text-[10px] text-zinc-600 mt-1">A IA lê a sua descrição da imagem — ela não enxerga a foto em si.</p>
+                            </div>
+                            <div id="memeSuggestions" class="space-y-2 hidden">
+                                <p class="text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Sugestões</p>
+                                <div id="memeSuggestionList" class="space-y-2"></div>
+                            </div>
+                            <div class="flex gap-2 pt-2 border-t border-[#1f1f23]">
+                                <button class="btn-primary" id="btnMemeDownload"><i class="ph ph-download-simple mr-1" aria-hidden="true"></i>Baixar PNG</button>
+                                <button class="btn-secondary" id="btnMemeSave">Salvar na Biblioteca</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+ 
+        <!-- ================= LIBRARY ================= -->
+        <section id="view-library" class="view-section">
+            <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
+                <h2 class="text-sm font-medium text-zinc-200">Biblioteca</h2>
+                <div class="ml-auto">
+                    <select id="libraryFilter" class="bg-[#18181b] border border-[#27272a] rounded-lg text-xs text-zinc-300 py-1.5 px-2 focus:outline-none" aria-label="Filtrar por status">
+                        <option value="all">Todos</option>
+                        <option value="draft">Rascunhos</option>
+                        <option value="scheduled">Agendados</option>
+                        <option value="meme">Memes</option>
+                    </select>
+                </div>
+            </header>
+            <div class="flex-1 overflow-y-auto p-6">
+                <div id="libraryEmpty" class="h-full flex flex-col items-center justify-center text-center">
+                    <i class="ph ph-folder-open text-3xl text-zinc-600 mb-3" aria-hidden="true"></i>
+                    <p class="text-sm text-zinc-400 mb-1">Sua biblioteca está vazia.</p>
+                    <p class="text-xs text-zinc-600 mb-4">Os cortes que você salvar no Video Lab aparecem aqui.</p>
+                    <button class="btn-secondary" data-goto="video-lab">Abrir o Video Lab</button>
+                </div>
+                <div id="libraryGrid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-6xl mx-auto"></div>
+            </div>
+        </section>
+ 
+        <!-- ================= CALENDAR ================= -->
+        <section id="view-calendar" class="view-section">
+            <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
+                <h2 class="text-sm font-medium text-zinc-200">Calendário de Conteúdo</h2>
+                <div class="ml-auto flex items-center gap-2">
+                    <button class="btn-secondary !py-1 !px-2" id="calPrev" aria-label="Mês anterior"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
+                    <span class="text-sm text-zinc-300 w-40 text-center" id="calTitle"></span>
+                    <button class="btn-secondary !py-1 !px-2" id="calNext" aria-label="Próximo mês"><i class="ph ph-caret-right" aria-hidden="true"></i></button>
+                </div>
+            </header>
+            <div class="flex-1 overflow-y-auto p-6">
+                <div class="max-w-5xl mx-auto">
+                    <p class="text-xs text-zinc-500 mb-4">Planejamento de publicações. A postagem automática nas redes ainda não está conectada — por enquanto, o calendário organiza o que você vai publicar manualmente.</p>
+                    <div class="grid grid-cols-7 text-[11px] text-zinc-500 uppercase tracking-wider mb-2">
+                        <span class="px-2">Dom</span><span class="px-2">Seg</span><span class="px-2">Ter</span><span class="px-2">Qua</span><span class="px-2">Qui</span><span class="px-2">Sex</span><span class="px-2">Sáb</span>
+                    </div>
+                    <div id="calGrid" class="grid grid-cols-7 gap-px bg-[#27272a] border border-[#27272a] rounded-xl overflow-hidden"></div>
+                </div>
+            </div>
+        </section>
+ 
+        <!-- ================= ANALYTICS ================= -->
+        <section id="view-analytics" class="view-section">
+            <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
+                <h2 class="text-sm font-medium text-zinc-200">Creator Intelligence</h2>
+            </header>
+            <div class="flex-1 overflow-y-auto p-8">
+                <div class="max-w-4xl mx-auto">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-px bg-[#27272a] border border-[#27272a] rounded-xl overflow-hidden mb-8">
+                        <div class="bg-[#101012] p-5">
+                            <p class="text-[11px] text-zinc-500 uppercase tracking-wider mb-1">Clips criados</p>
+                            <p class="text-2xl font-semibold text-white" id="anClips">0</p>
+                        </div>
+                        <div class="bg-[#101012] p-5">
+                            <p class="text-[11px] text-zinc-500 uppercase tracking-wider mb-1">Score viral médio</p>
+                            <p class="text-2xl font-semibold text-white" id="anScore">—</p>
+                        </div>
+                        <div class="bg-[#101012] p-5">
+                            <p class="text-[11px] text-zinc-500 uppercase tracking-wider mb-1">Duração média dos clips</p>
+                            <p class="text-2xl font-semibold text-white" id="anDuration">—</p>
+                        </div>
+                    </div>
+ 
+                    <div class="mb-8" id="anInsightWrap">
+                        <h3 class="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-3">Leitura da equipe</h3>
+                        <p class="text-sm text-zinc-300 leading-relaxed" id="anInsight"></p>
+                    </div>
+ 
+                    <div class="border-t border-[#1f1f23] pt-6">
+                        <h3 class="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-3">Desempenho nas plataformas</h3>
+                        <p class="text-sm text-zinc-500 mb-4">Views, retenção e receita reais dependem da conexão com as contas. Essas integrações ainda não estão ativas.</p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="text-xs text-zinc-400 border border-[#27272a] rounded-lg px-3 py-2 flex items-center gap-2"><i class="ph ph-youtube-logo" aria-hidden="true"></i> YouTube — Em breve</span>
+                            <span class="text-xs text-zinc-400 border border-[#27272a] rounded-lg px-3 py-2 flex items-center gap-2"><i class="ph ph-twitch-logo" aria-hidden="true"></i> Twitch — Em breve</span>
+                            <span class="text-xs text-zinc-400 border border-[#27272a] rounded-lg px-3 py-2 flex items-center gap-2"><i class="ph ph-tiktok-logo" aria-hidden="true"></i> TikTok — Em breve</span>
+                            <span class="text-xs text-zinc-400 border border-[#27272a] rounded-lg px-3 py-2 flex items-center gap-2"><i class="ph ph-instagram-logo" aria-hidden="true"></i> Instagram — Em breve</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+ 
+        <!-- ================= PLAN ================= -->
+        <section id="view-plan" class="view-section">
+            <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
+                <h2 class="text-sm font-medium text-zinc-200">Plano e cobrança</h2>
+            </header>
+            <div class="flex-1 overflow-y-auto p-8">
+                <div class="max-w-3xl mx-auto">
+                    <p class="text-sm text-zinc-400 mb-1">Seu plano atual: <strong class="text-white" id="planCurrent">Free</strong></p>
+                    <p class="text-xs text-zinc-600 mb-8" id="planNote">A cobrança é feita pelo Mercado Pago (PIX ou cartão). O upgrade exige backend configurado e conta conectada.</p>
+ 
+                    <div class="border border-[#27272a] rounded-xl overflow-hidden divide-y divide-[#27272a]">
+                        <div class="grid grid-cols-4 text-[11px] text-zinc-500 uppercase tracking-wider bg-[#101012]">
+                            <div class="p-4">Recurso</div>
+                            <div class="p-4">Free</div>
+                            <div class="p-4">Creator · R$ 49/mês</div>
+                            <div class="p-4">Pro · R$ 99/mês</div>
+                        </div>
+                        <div class="grid grid-cols-4 text-sm">
+                            <div class="p-4 text-zinc-400">Briefings por mês</div>
+                            <div class="p-4 text-zinc-300">10</div>
+                            <div class="p-4 text-zinc-300">100</div>
+                            <div class="p-4 text-zinc-300">Ilimitado</div>
+                        </div>
+                        <div class="grid grid-cols-4 text-sm">
+                            <div class="p-4 text-zinc-400">Clips salvos</div>
+                            <div class="p-4 text-zinc-300">15</div>
+                            <div class="p-4 text-zinc-300">200</div>
+                            <div class="p-4 text-zinc-300">Ilimitado</div>
+                        </div>
+                        <div class="grid grid-cols-4 text-sm">
+                            <div class="p-4 text-zinc-400">Agentes na equipe</div>
+                            <div class="p-4 text-zinc-300">3</div>
+                            <div class="p-4 text-zinc-300">5</div>
+                            <div class="p-4 text-zinc-300">5 + prioridade</div>
+                        </div>
+                        <div class="grid grid-cols-4 text-sm items-center">
+                            <div class="p-4 text-zinc-400"></div>
+                            <div class="p-4 text-zinc-500 text-xs">Plano atual</div>
+                            <div class="p-4"><button class="btn-primary !text-xs" data-plan="creator">Assinar Creator</button></div>
+                            <div class="p-4"><button class="btn-primary !text-xs" data-plan="pro">Assinar Pro</button></div>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-zinc-600 mt-4">Os limites acima são a estrutura inicial e podem ser ajustados no backend antes do lançamento.</p>
+                </div>
+            </div>
+        </section>
+ 
     </main>
-
-    <!-- Modal Configuração API -->
-    <div id="apiModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center">
-        <div class="glass-card w-[400px] p-6">
-            <h3 class="text-lg font-semibold text-white mb-2">Configuração de Servidor</h3>
-            <p class="text-xs text-zinc-400 mb-6">Para iniciar os agentes, insira sua chave secreta da API do OpenRouter. Ela será salva apenas no seu navegador local.</p>
-            
-            <label class="block text-xs font-medium text-zinc-300 mb-1">OpenRouter API Key</label>
-            <input type="password" id="apiKeyInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-6" placeholder="sk-or-v1-...">
-            
+ 
+    <!-- Auth Overlay -->
+    <div id="authOverlay" class="fixed inset-0 bg-[#09090b] z-40 hidden items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+        <div class="w-[380px] max-w-[calc(100vw-32px)]">
+            <div class="flex items-center gap-3 mb-8 justify-center">
+                <div class="w-9 h-9 rounded-lg bg-[#18181b] border border-[#27272a] flex items-center justify-center">
+                    <i class="ph ph-lightning text-emerald-500 text-lg" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-white">Viralize.AI</p>
+                    <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Workspace</p>
+                </div>
+            </div>
+            <div class="glass-card bg-[#101012] p-6">
+                <h3 class="text-base font-semibold text-white mb-1" id="authTitle">Entrar</h3>
+                <p class="text-xs text-zinc-500 mb-5" id="authSubtitle">Use seu e-mail e senha para acessar o workspace.</p>
+ 
+                <label class="block text-xs font-medium text-zinc-300 mb-1" for="authEmail">E-mail</label>
+                <input type="email" id="authEmail" autocomplete="email" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-3" placeholder="voce@exemplo.com">
+ 
+                <div id="authPasswordWrap">
+                    <label class="block text-xs font-medium text-zinc-300 mb-1" for="authPassword">Senha</label>
+                    <input type="password" id="authPassword" autocomplete="current-password" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-2" placeholder="••••••••">
+                </div>
+ 
+                <p class="text-xs text-red-400 mb-2 hidden" id="authError"></p>
+                <p class="text-xs text-emerald-500 mb-2 hidden" id="authInfo"></p>
+ 
+                <button class="btn-primary w-full mt-2" id="authSubmit">Entrar</button>
+ 
+                <div class="flex items-center justify-between mt-4 text-xs">
+                    <button class="text-zinc-400 hover:text-white" id="authToggleMode">Criar conta</button>
+                    <button class="text-zinc-400 hover:text-white" id="authForgot">Esqueci a senha</button>
+                </div>
+            </div>
+            <p class="text-center mt-4">
+                <button class="text-[11px] text-zinc-600 hover:text-zinc-400" id="authSkip">Continuar sem conta (modo local)</button>
+            </p>
+        </div>
+    </div>
+ 
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <div class="glass-card w-[440px] max-w-[calc(100vw-32px)] p-6 bg-[#101012]">
+            <h3 class="text-lg font-semibold text-white mb-1" id="settingsTitle">Configurações</h3>
+            <p class="text-xs text-zinc-400 mb-5">As chaves ficam salvas apenas neste navegador. Em produção, mova as chamadas de IA para o seu backend.</p>
+ 
+            <label class="block text-xs font-medium text-zinc-300 mb-1" for="apiKeyInput">OpenRouter API Key</label>
+            <input type="password" id="apiKeyInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-4" placeholder="sk-or-v1-...">
+ 
+            <label class="block text-xs font-medium text-zinc-300 mb-1" for="modelInput">Modelo</label>
+            <input type="text" id="modelInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-4" placeholder="ex.: google/gemini-2.0-flash-exp:free">
+ 
+            <label class="block text-xs font-medium text-zinc-300 mb-1" for="backendInput">URL do backend (FastAPI / Render)</label>
+            <input type="url" id="backendInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-4" placeholder="https://seu-backend.onrender.com">
+ 
+            <label class="block text-xs font-medium text-zinc-300 mb-1" for="supabaseUrlInput">Supabase URL</label>
+            <input type="url" id="supabaseUrlInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-4" placeholder="https://xxxx.supabase.co">
+ 
+            <label class="block text-xs font-medium text-zinc-300 mb-1" for="supabaseKeyInput">Supabase anon key (pública)</label>
+            <input type="password" id="supabaseKeyInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-6" placeholder="eyJhbGciOi...">
+ 
             <div class="flex justify-end gap-3">
-                <button id="closeApiModal" class="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white transition-colors">Cancelar</button>
-                <button id="saveApiBtn" class="px-4 py-2 rounded-lg text-sm font-medium bg-white text-zinc-950 hover:bg-zinc-200 transition-colors">Salvar Chave</button>
+                <button id="closeSettings" class="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white transition-colors">Cancelar</button>
+                <button id="saveSettings" class="px-4 py-2 rounded-lg text-sm font-medium bg-white text-zinc-950 hover:bg-zinc-200 transition-colors">Salvar</button>
             </div>
         </div>
     </div>
-
-    <!-- LOGIC (JavaScript) -->
+ 
+    <!-- Schedule Modal -->
+    <div id="scheduleModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="scheduleTitle">
+        <div class="glass-card w-[440px] max-w-[calc(100vw-32px)] p-6 bg-[#101012]">
+            <h3 class="text-lg font-semibold text-white mb-1" id="scheduleTitle">Planejar publicação</h3>
+            <p class="text-xs text-zinc-400 mb-5" id="scheduleSubtitle"></p>
+ 
+            <label class="block text-xs font-medium text-zinc-300 mb-1" for="scheduleClip">Clip</label>
+            <select id="scheduleClip" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none mb-4"></select>
+ 
+            <label class="block text-xs font-medium text-zinc-300 mb-1" for="schedulePlatform">Plataforma</label>
+            <select id="schedulePlatform" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none mb-4">
+                <option>TikTok</option>
+                <option>YouTube Shorts</option>
+                <option>Instagram Reels</option>
+            </select>
+ 
+            <label class="block text-xs font-medium text-zinc-300 mb-1" for="scheduleTime">Horário</label>
+            <input type="time" id="scheduleTime" value="18:00" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none mb-6">
+ 
+            <div class="flex justify-end gap-3">
+                <button id="closeSchedule" class="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white transition-colors">Cancelar</button>
+                <button id="saveSchedule" class="btn-primary">Planejar</button>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- Render / Edit Modal -->
+    <div id="renderModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="renderTitle">
+        <div class="glass-card w-[480px] max-w-[calc(100vw-32px)] p-6 bg-[#101012] max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg font-semibold text-white mb-1" id="renderTitle">Editar &amp; renderizar</h3>
+            <p class="text-xs text-zinc-400 mb-5" id="renderSubtitle"></p>
+ 
+            <div id="renderSuggestionBanner" class="hidden text-xs text-emerald-500 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-3 py-2 mb-4 flex items-start gap-2">
+                <i class="ph ph-sparkle mt-0.5" aria-hidden="true"></i>
+                <span>Preenchemos com a sugestão da equipe (Retention Editor + Trend Hunter). Ajuste como quiser.</span>
+            </div>
+ 
+            <label class="block text-xs font-medium text-zinc-300 mb-1" for="renderTopText">Legenda de cima (meme)</label>
+            <input type="text" id="renderTopText" maxlength="60" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-3" placeholder="Ex.: quando o mata-mata começa">
+ 
+            <label class="block text-xs font-medium text-zinc-300 mb-1" for="renderBottomText">Legenda de baixo (meme)</label>
+            <input type="text" id="renderBottomText" maxlength="60" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-3" placeholder="Ex.: e o ping decide subir">
+ 
+            <label class="block text-xs font-medium text-zinc-300 mb-1" for="renderAudioStyle">Trilha sonora</label>
+            <select id="renderAudioStyle" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none mb-1">
+                <option value="nenhum">Sem trilha</option>
+                <option value="upbeat">Upbeat / comédia</option>
+                <option value="tenso">Tenso / suspense</option>
+                <option value="lofi">Lo-fi / chill</option>
+                <option value="epico">Épico / motivacional</option>
+                <option value="proprio">Meu próprio áudio</option>
+            </select>
+            <p class="text-[10px] text-zinc-600 mb-3">Não baixamos áudios virais de outras redes sem licença — isso é risco de direitos autorais para o seu canal. Escolha um estilo para o servidor escolher uma trilha licenciada, ou envie o seu próprio áudio abaixo.</p>
+ 
+            <div id="renderOwnAudioWrap" class="hidden mb-3">
+                <label class="block text-xs font-medium text-zinc-300 mb-1" for="renderAudioFile">Arquivo de áudio</label>
+                <input type="file" id="renderAudioFile" accept="audio/*" class="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#18181b] file:text-zinc-300 file:text-xs">
+            </div>
+ 
+            <div id="renderStatusPanel" class="hidden glass-card p-3 mb-3">
+                <p class="text-xs text-zinc-300 flex items-center gap-2" id="renderStatusText"><i class="ph ph-spinner animate-spin" aria-hidden="true"></i> Enviando...</p>
+            </div>
+ 
+            <div id="renderResultPanel" class="hidden mb-3">
+                <video id="renderResultVideo" class="w-full rounded-lg border border-[#27272a]" controls></video>
+            </div>
+ 
+            <div class="flex justify-end gap-3 mt-2">
+                <button id="closeRender" class="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white transition-colors">Fechar</button>
+                <button id="submitRender" class="btn-primary">Renderizar vídeo</button>
+            </div>
+        </div>
+    </div>
+ 
+    <div id="toastArea" aria-live="polite"></div>
+ 
     <script>
-        // ================= NAVEGAÇÃO DE ABAS =================
-        const navWarRoom = document.getElementById('nav-war-room');
-        const navVideoLab = document.getElementById('nav-video-lab');
-        const viewWarRoom = document.getElementById('view-war-room');
-        const viewVideoLab = document.getElementById('view-video-lab');
-
-        function switchTab(activeNav, activeView) {
-            // Reset styles
-            [navWarRoom, navVideoLab].forEach(nav => {
-                nav.classList.remove('text-emerald-400', 'bg-emerald-400/10', 'border-emerald-400/20');
-                nav.classList.add('text-zinc-400');
-                if(!nav.classList.contains('border')) nav.classList.add('border', 'border-transparent');
+        'use strict';
+ 
+        // ================= DATA LAYER =================
+        const store = {
+            get(key, fallback) {
+                try {
+                    const raw = localStorage.getItem('viralize.' + key);
+                    return raw ? JSON.parse(raw) : fallback;
+                } catch { return fallback; }
+            },
+            set(key, value) {
+                localStorage.setItem('viralize.' + key, JSON.stringify(value));
+            }
+        };
+ 
+        const state = {
+            settings: store.get('settings', { apiKey: '', model: 'google/gemini-2.0-flash-exp:free', backendUrl: 'https://backend-viral.onrender.com', supabaseUrl: '', supabaseKey: '' }),
+            session: null,
+            plan: 'free',
+            authSkipped: store.get('authSkipped', false),
+            clips: store.get('clips', []),
+            memes: store.get('memes', []),
+            schedule: store.get('schedule', []),
+            activity: store.get('activity', []),
+            briefingCount: store.get('briefingCount', 0),
+            teamSuggestion: store.get('teamSuggestion', null),
+            video: null,          // { file, url, duration, width, height }
+            segments: [],         // { id, start, end, label, score, reason }
+            markIn: null,
+            markOut: null,
+            pipelineRunning: false,
+            calMonth: (new Date()).getMonth(),
+            calYear: (new Date()).getFullYear(),
+            serverFileId: null
+        };
+ 
+        // Backfill do backend de render para sessões que já tinham configurações salvas sem essa URL.
+        if (!state.settings.backendUrl) {
+            state.settings.backendUrl = 'https://backend-viral.onrender.com';
+            store.set('settings', state.settings);
+        }
+ 
+        function saveClips() { store.set('clips', state.clips); }
+        function saveMemes() {
+            try { store.set('memes', state.memes); return true; }
+            catch { toast('Sem espaço no navegador para salvar mais memes. Exclua alguns na Biblioteca.', 'ph-warning'); return false; }
+        }
+        function saveSchedule() { store.set('schedule', state.schedule); }
+ 
+        function logActivity(text) {
+            state.activity.unshift({ text, at: Date.now() });
+            state.activity = state.activity.slice(0, 20);
+            store.set('activity', state.activity);
+        }
+ 
+        // ================= HELPERS =================
+        const $ = (id) => document.getElementById(id);
+ 
+        function fmtTime(sec) {
+            if (!isFinite(sec)) return '00:00';
+            sec = Math.max(0, sec);
+            const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+            return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        }
+ 
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+ 
+        function toast(message, icon = 'ph-info') {
+            const el = document.createElement('div');
+            el.className = 'toast';
+            el.innerHTML = `<i class="ph ${icon} text-emerald-500" aria-hidden="true"></i><span>${escapeHtml(message)}</span>`;
+            $('toastArea').appendChild(el);
+            setTimeout(() => el.remove(), 4200);
+        }
+ 
+        // ================= NAVIGATION =================
+        const views = ['home', 'war-room', 'video-lab', 'meme-lab', 'library', 'calendar', 'analytics', 'plan'];
+ 
+        function showView(name) {
+            views.forEach(v => {
+                $('view-' + v).classList.toggle('active', v === name);
             });
-            [viewWarRoom, viewVideoLab].forEach(view => view.classList.remove('active'));
-
-            // Apply active styles
-            activeNav.classList.remove('text-zinc-400', 'border-transparent');
-            activeNav.classList.add('text-emerald-400', 'bg-emerald-400/10', 'border-emerald-400/20');
-            activeView.classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.toggle('active', link.dataset.view === name);
+            });
+            if (name === 'home') renderHome();
+            if (name === 'library') renderLibrary();
+            if (name === 'calendar') renderCalendar();
+            if (name === 'analytics') renderAnalytics();
+            if (name === 'plan') renderPlan();
         }
-
-        navWarRoom.addEventListener('click', (e) => { e.preventDefault(); switchTab(navWarRoom, viewWarRoom); });
-        navVideoLab.addEventListener('click', (e) => { e.preventDefault(); switchTab(navVideoLab, viewVideoLab); });
-
-
-        // ================= LÓGICA DA WAR ROOM (IA) =================
-        const chatFeed = document.getElementById('chatFeed');
-        const userInput = document.getElementById('userInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const apiModal = document.getElementById('apiModal');
-        const apiKeyInput = document.getElementById('apiKeyInput');
-        const saveApiBtn = document.getElementById('saveApiBtn');
-        const closeApiModal = document.getElementById('closeApiModal');
-        const btnConfigApi = document.getElementById('btnConfigApi');
-
-        let apiKey = localStorage.getItem('openRouterApiKey') || '';
-
-        userInput.addEventListener('input', function() {
+ 
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => { e.preventDefault(); showView(link.dataset.view); });
+        });
+        document.querySelectorAll('[data-goto]').forEach(btn => {
+            btn.addEventListener('click', () => showView(btn.dataset.goto));
+        });
+ 
+        // ================= AI TEAM =================
+        const AGENTS = [
+            {
+                id: 'director', name: 'Diretor', icon: 'ph-compass',
+                working: 'Organizando o briefing e definindo o ângulo do conteúdo',
+                prompt: 'Você é o Diretor de uma agência de conteúdo para streamers. Leia o briefing do criador e defina em poucas linhas: o ângulo principal do conteúdo, o público-alvo e o que a equipe deve priorizar. Seja direto, específico e profissional. Responda em Português do Brasil, sem saudações, em no máximo 120 palavras.'
+            },
+            {
+                id: 'trend', name: 'Trend Hunter', icon: 'ph-trend-up',
+                working: 'Cruzando o briefing com formatos que estão performando',
+                prompt: 'Você é o Caçador de Tendências de uma agência de conteúdo. Com base no briefing e na direção do Diretor, aponte: 2 formatos de vídeo curto que combinam com esse conteúdo, sugestões de sonoridade/estilo de edição, e 5 hashtags relevantes. Não invente estatísticas de plataformas. Responda em Português do Brasil, sem saudações, em no máximo 130 palavras.'
+            },
+            {
+                id: 'editor', name: 'Retention Editor', icon: 'ph-scissors',
+                working: 'Desenhando a estrutura de corte e o hook',
+                prompt: 'Você é o Editor de Retenção. Com base no briefing e nas análises anteriores, proponha a estrutura do clip: hook nos primeiros 2 segundos (descreva exatamente o que mostrar), desenvolvimento, payoff e duração ideal em segundos. Indique onde cortar respiros e pausas. Responda em Português do Brasil, sem saudações, em no máximo 130 palavras.'
+            },
+            {
+                id: 'strategist', name: 'Strategist', icon: 'ph-strategy',
+                working: 'Definindo plataformas, títulos e plano de publicação',
+                prompt: 'Você é o Estrategista de Publicação. Com base em tudo acima, entregue: plataforma prioritária entre TikTok, Shorts e Reels (com justificativa curta), 3 opções de título/caption, e uma sugestão de janela de horário para postar considerando público gamer brasileiro. Responda em Português do Brasil, sem saudações, em no máximo 130 palavras.'
+            },
+            {
+                id: 'monetization', name: 'Monetization Analyst', icon: 'ph-coins',
+                working: 'Avaliando oportunidades de monetização',
+                prompt: 'Você é o Analista de Monetização. Com base no plano acima, aponte de forma realista: como esse conteúdo pode gerar receita (fundo de criadores, direcionamento para live, patrocínio, comunidade) e um próximo passo comercial concreto. Não prometa números. Responda em Português do Brasil, sem saudações, em no máximo 100 palavras.'
+            }
+        ];
+ 
+        function renderAgentList() {
+            $('agentStatusList').innerHTML = AGENTS.map(a => `
+                <div class="flex items-center gap-2 text-xs text-zinc-300">
+                    <span class="status-dot" id="dot-${a.id}"></span> ${a.name}
+                    <span class="ml-auto text-[10px] text-zinc-600" id="dotlabel-${a.id}"></span>
+                </div>`).join('');
+        }
+ 
+        function setAgentStatus(id, status, label = '') {
+            const dot = $('dot-' + id);
+            if (!dot) return;
+            dot.className = 'status-dot' + (status ? ' ' + status : '');
+            $('dotlabel-' + id).textContent = label;
+        }
+ 
+        function resetAgents() { AGENTS.forEach(a => setAgentStatus(a.id, '', '')); }
+ 
+        // ================= ENGINE STATUS =================
+        function refreshEngineStatus() {
+            const ok = !!state.settings.apiKey;
+            $('engineDot').className = 'status-dot' + (ok ? ' online' : '');
+            $('engineLabel').textContent = ok ? ('Engine: OpenRouter · ' + state.settings.model.split('/').pop()) : 'Engine não configurada';
+        }
+ 
+        // ================= OPENROUTER =================
+        async function callOpenRouter(messages, { json = false } = {}) {
+            const body = { model: state.settings.model, messages };
+            if (json) body.response_format = { type: 'json_object' };
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + state.settings.apiKey,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+            if (!response.ok) {
+                let detail = '';
+                try { detail = (await response.json()).error?.message || ''; } catch {}
+                if (response.status === 401) throw new Error('Chave da OpenRouter inválida ou expirada. Verifique nas Configurações.');
+                if (response.status === 402) throw new Error('Sem créditos na OpenRouter para esse modelo. Troque para um modelo gratuito nas Configurações.');
+                if (response.status === 429) throw new Error('Limite de requisições atingido. Aguarde alguns segundos e tente de novo.');
+                throw new Error(detail || ('O serviço de IA respondeu com erro ' + response.status + '.'));
+            }
+            const data = await response.json();
+            const content = data.choices?.[0]?.message?.content;
+            if (!content) throw new Error('O modelo não retornou conteúdo. Tente novamente ou troque o modelo.');
+            return content;
+        }
+ 
+        // ================= WAR ROOM =================
+        const chatFeed = $('chatFeed');
+        const userInput = $('userInput');
+ 
+        userInput.addEventListener('input', function () {
             this.style.height = 'auto';
-            this.style.height = (this.scrollHeight < 150 ? this.scrollHeight : 150) + 'px';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
         });
-
-        userInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-            }
+        userInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
         });
-
-        sendBtn.addEventListener('click', handleSend);
-
-        btnConfigApi.addEventListener('click', () => {
-            apiKeyInput.value = apiKey;
-            apiModal.classList.remove('hidden');
-        });
-
-        closeApiModal.addEventListener('click', () => {
-            apiModal.classList.add('hidden');
-        });
-
-        saveApiBtn.addEventListener('click', () => {
-            apiKey = apiKeyInput.value.trim();
-            localStorage.setItem('openRouterApiKey', apiKey);
-            apiModal.classList.add('hidden');
-            appendLog('System', 'Chave de API configurada. Os agentes estão prontos.', 'ph-check-circle', 'text-emerald-500');
-        });
-
-        async function handleSend() {
-            const text = userInput.value.trim();
-            if (!text) return;
-            if (!apiKey) { apiModal.classList.remove('hidden'); return; }
-
-            appendLog('Briefing Recebido', text, 'ph-user', 'text-zinc-400');
-            userInput.value = '';
-            userInput.style.height = 'auto';
-
-            const loadingId = 'loading-' + Date.now();
-            appendLoadingLog(loadingId);
-
-            try {
-                const aiResponseText = await callOpenRouterAPI(text, apiKey);
-                removeLog(loadingId);
-                const formattedResponse = formatResponse(aiResponseText);
-                appendLog('Director.AI Executing', formattedResponse, 'ph-cpu', 'text-emerald-500');
-            } catch (error) {
-                removeLog(loadingId);
-                appendLog('System.Error', `Falha no processamento: ${error.message}`, 'ph-warning', 'text-red-500');
-            }
+        $('sendBtn').addEventListener('click', handleSend);
+ 
+        function appendLog(title, htmlContent, iconClass, iconColor, id = '') {
+            const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            chatFeed.insertAdjacentHTML('beforeend', `
+            <div class="log-entry" ${id ? `id="${id}"` : ''}>
+                <div class="flex items-start gap-3">
+                    <div class="agent-avatar"><i class="ph ${iconClass} ${iconColor} text-xs" aria-hidden="true"></i></div>
+                    <div class="flex-1 glass-card p-4 min-w-0">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">${escapeHtml(title)}</span>
+                            <span class="text-[10px] text-zinc-600">${timeString}</span>
+                        </div>
+                        <div class="text-sm text-zinc-400 leading-relaxed log-body">${htmlContent}</div>
+                    </div>
+                </div>
+            </div>`);
+            chatFeed.scrollTop = chatFeed.scrollHeight;
         }
-
+ 
         function formatResponse(text) {
-            let html = text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>');
+            let html = escapeHtml(text);
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>');
             html = html.replace(/\n/g, '<br>');
             return html;
         }
-
-        async function callOpenRouterAPI(promptText, key) {
-            const apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-            const systemPrompt = `Você é a Inteligência Central do Viralize.AI. Você coordena uma equipe de IA. Responda SEMPRE em Português do Brasil. Tom de relatório de sistema, profissional e focado em produtividade criativa. Entregue dados ou passos acionáveis.`;
-
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: 'openrouter/free',
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: promptText }
-                    ]
-                })
-            });
-
-            if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-            const data = await response.json();
-            return data.choices[0].message.content;
+ 
+        async function handleSend() {
+            const text = userInput.value.trim();
+            if (!text || state.pipelineRunning) return;
+            if (!state.settings.apiKey) {
+                openSettings();
+                toast('Configure sua chave da OpenRouter para ativar a equipe.', 'ph-key');
+                return;
+            }
+ 
+            appendLog('Briefing', formatResponse(text), 'ph-user', 'text-zinc-400');
+            userInput.value = '';
+            userInput.style.height = 'auto';
+ 
+            state.pipelineRunning = true;
+            $('sendBtn').disabled = true;
+            resetAgents();
+ 
+            const transcript = [{ role: 'user', content: 'Briefing do criador: ' + text }];
+            let failed = false;
+ 
+            for (const agent of AGENTS) {
+                setAgentStatus(agent.id, 'working', 'ativo');
+                const loadingId = 'loading-' + agent.id + '-' + Date.now();
+                appendLog(agent.name, `<span class="text-zinc-500 flex items-center gap-2"><i class="ph ph-spinner animate-spin" aria-hidden="true"></i>${escapeHtml(agent.working)}...</span>`, agent.icon, 'text-zinc-500', loadingId);
+ 
+                try {
+                    const output = await callOpenRouter([
+                        { role: 'system', content: agent.prompt },
+                        ...transcript
+                    ]);
+                    document.getElementById(loadingId)?.remove();
+                    appendLog(agent.name, formatResponse(output), agent.icon, 'text-emerald-500');
+                    transcript.push({ role: 'assistant', content: `[${agent.name}] ` + output });
+                    setAgentStatus(agent.id, 'done', '');
+                } catch (error) {
+                    document.getElementById(loadingId)?.remove();
+                    setAgentStatus(agent.id, 'error', '');
+                    appendLog('Sistema', `Não conseguimos concluir a análise do ${agent.name}. ${escapeHtml(error.message)}`, 'ph-warning', 'text-red-500');
+                    failed = true;
+                    break;
+                }
+            }
+ 
+            if (!failed) {
+                state.briefingCount++;
+                store.set('briefingCount', state.briefingCount);
+                logActivity('Briefing analisado pela equipe: "' + text.slice(0, 60) + (text.length > 60 ? '…' : '') + '"');
+                appendLog('Sistema', 'Plano completo. Quando o vídeo estiver pronto, leve-o ao <strong class="text-white">Video Lab</strong> para marcar os cortes.', 'ph-check-circle', 'text-emerald-500');
+ 
+                // Traduz a leitura da equipe em uma sugestão pronta para execução no Video Lab
+                // (legenda estilo meme + estilo de trilha), conectando a Sala de Guerra à edição real.
+                try {
+                    const suggestionRaw = await callOpenRouter([
+                        {
+                            role: 'system',
+                            content: 'Você é o Editor de Retenção revisando toda a conversa acima para preparar a execução no Video Lab. Responda APENAS com JSON válido no formato {"top_text":"...","bottom_text":"...","audio_style":"upbeat|tenso|lofi|epico|nenhum","audio_reason":"..."}. As legendas devem ter no máximo 60 caracteres cada, no estilo de legenda de meme (arma a situação em cima, entrega o payoff embaixo), e podem ser string vazia se não fizerem sentido para esse conteúdo específico. audio_style deve refletir a sonoridade sugerida pelo Trend Hunter. Sem texto fora do JSON.'
+                        },
+                        ...transcript
+                    ], { json: true });
+                    const match = suggestionRaw.match(/\{[\s\S]*\}/);
+                    if (match) {
+                        const parsed = JSON.parse(match[0]);
+                        const validStyles = ['upbeat', 'tenso', 'lofi', 'epico', 'nenhum'];
+                        state.teamSuggestion = {
+                            topText: (parsed.top_text || '').slice(0, 60),
+                            bottomText: (parsed.bottom_text || '').slice(0, 60),
+                            audioStyle: validStyles.includes(parsed.audio_style) ? parsed.audio_style : 'nenhum',
+                            audioReason: parsed.audio_reason || '',
+                            createdAt: Date.now()
+                        };
+                        store.set('teamSuggestion', state.teamSuggestion);
+                        appendLog('Sistema', 'A equipe deixou pronta uma sugestão de legenda e trilha. No <strong class="text-white">Video Lab</strong>, use "Editar &amp; renderizar" em um corte para aplicá-la.', 'ph-sparkle', 'text-emerald-500');
+                    }
+                } catch {
+                    // A sugestão é um bônus sobre o plano principal — se essa chamada extra falhar
+                    // (ex.: limite de requisições), o briefing já foi concluído com sucesso acima.
+                }
+            }
+ 
+            state.pipelineRunning = false;
+            $('sendBtn').disabled = false;
+            setTimeout(resetAgents, 4000);
         }
-
-        function appendLog(title, content, iconClass, iconColor) {
-            const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            const logHTML = `
-            <div class="log-entry">
-                <div class="flex items-start gap-3">
-                    <div class="w-6 h-6 rounded bg-[#18181b] border border-[#27272a] flex items-center justify-center mt-1 shrink-0">
-                        <i class="ph ${iconClass} ${iconColor} text-xs"></i>
-                    </div>
-                    <div class="flex-1 glass-card p-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">${title}</span>
-                            <span class="text-[10px] text-zinc-600">${timeString}</span>
-                        </div>
-                        <div class="text-sm text-zinc-400 leading-relaxed">${content}</div>
-                    </div>
-                </div>
-            </div>`;
-            chatFeed.insertAdjacentHTML('beforeend', logHTML);
-            chatFeed.scrollTop = chatFeed.scrollHeight;
+ 
+        // ================= SETTINGS =================
+        function openSettings() {
+            $('apiKeyInput').value = state.settings.apiKey;
+            $('modelInput').value = state.settings.model;
+            $('backendInput').value = state.settings.backendUrl;
+            $('supabaseUrlInput').value = state.settings.supabaseUrl || '';
+            $('supabaseKeyInput').value = state.settings.supabaseKey || '';
+            $('settingsModal').classList.remove('hidden');
+            $('settingsModal').classList.add('flex');
+            $('apiKeyInput').focus();
         }
-
-        function appendLoadingLog(id) {
-            const logHTML = `
-            <div id="${id}" class="log-entry">
-                <div class="flex items-start gap-3">
-                    <div class="w-6 h-6 rounded bg-[#18181b] border border-[#27272a] flex items-center justify-center mt-1 shrink-0">
-                        <i class="ph ph-spinner animate-spin text-zinc-500 text-xs"></i>
-                    </div>
-                    <div class="flex-1 glass-card p-4">
-                        <div class="text-xs text-zinc-500 flex items-center gap-2">Processando pipeline de dados através dos agentes...</div>
-                    </div>
-                </div>
-            </div>`;
-            chatFeed.insertAdjacentHTML('beforeend', logHTML);
-            chatFeed.scrollTop = chatFeed.scrollHeight;
+        function closeSettings() {
+            $('settingsModal').classList.add('hidden');
+            $('settingsModal').classList.remove('flex');
         }
-
-        function removeLog(id) {
-            const el = document.getElementById(id);
-            if (el) el.remove();
-        }
-
-
-        // ================= LÓGICA DO VIDEO LAB (RENDER) =================
-        const RENDER_BACKEND_URL = "https://backend-viral.onrender.com"; // Conexão com seu servidor Python!
-        
-        const videoFileInput = document.getElementById('videoFileInput');
-        const uploadStatusPanel = document.getElementById('uploadStatusPanel');
-        const fileNameDisplay = document.getElementById('fileNameDisplay');
-        const uploadPercentage = document.getElementById('uploadPercentage');
-        const uploadProgressBar = document.getElementById('uploadProgressBar');
-        const uploadStatusText = document.getElementById('uploadStatusText');
-        const uploadZone = document.getElementById('uploadZone');
-
-        // Drag & Drop visual effects
-        uploadZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadZone.classList.add('border-emerald-500');
-            uploadZone.classList.remove('border-[#27272a]');
+        $('btnSettings').addEventListener('click', openSettings);
+        $('closeSettings').addEventListener('click', closeSettings);
+        $('saveSettings').addEventListener('click', () => {
+            state.settings.apiKey = $('apiKeyInput').value.trim();
+            state.settings.model = $('modelInput').value.trim() || 'google/gemini-2.0-flash-exp:free';
+            state.settings.backendUrl = $('backendInput').value.trim().replace(/\/+$/, '');
+            const newSbUrl = $('supabaseUrlInput').value.trim().replace(/\/+$/, '');
+            const newSbKey = $('supabaseKeyInput').value.trim();
+            const sbChanged = newSbUrl !== (state.settings.supabaseUrl || '') || newSbKey !== (state.settings.supabaseKey || '');
+            state.settings.supabaseUrl = newSbUrl;
+            state.settings.supabaseKey = newSbKey;
+            store.set('settings', state.settings);
+            refreshEngineStatus();
+            checkBackend();
+            closeSettings();
+            toast('Configurações salvas.', 'ph-check-circle');
+            if (sbChanged) initAuth();
         });
-        uploadZone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            uploadZone.classList.remove('border-emerald-500');
-            uploadZone.classList.add('border-[#27272a]');
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') { closeSettings(); closeScheduleModal(); closeRenderModal(); }
         });
+ 
+        // ================= BACKEND (FastAPI/Render) =================
+        async function checkBackend() {
+            const url = state.settings.backendUrl;
+            const dot = $('renderDot'), label = $('renderLabel');
+            if (!url) {
+                dot.className = 'status-dot';
+                label.textContent = 'Servidor de render: não configurado';
+                return;
+            }
+            label.textContent = 'Servidor de render: verificando...';
+            try {
+                const res = await fetch(url + '/health', { method: 'GET' });
+                if (res.ok) {
+                    dot.className = 'status-dot online';
+                    label.textContent = 'Servidor de render: online';
+                } else { throw new Error(); }
+            } catch {
+                dot.className = 'status-dot error';
+                label.textContent = 'Servidor de render: sem resposta (pode estar hibernando)';
+            }
+        }
+ 
+        // ================= VIDEO LAB =================
+        const labVideo = $('labVideo');
+        const videoFileInput = $('videoFileInput');
+        const uploadZone = $('uploadZone');
+ 
+        $('btnBrowseVideo').addEventListener('click', (e) => { e.stopPropagation(); videoFileInput.click(); });
+        uploadZone.addEventListener('click', () => videoFileInput.click());
+        uploadZone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); videoFileInput.click(); } });
+ 
+        uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('border-emerald-500'); });
+        uploadZone.addEventListener('dragleave', (e) => { e.preventDefault(); uploadZone.classList.remove('border-emerald-500'); });
         uploadZone.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadZone.classList.remove('border-emerald-500');
-            uploadZone.classList.add('border-[#27272a]');
-            
-            if(e.dataTransfer.files.length > 0) {
-                videoFileInput.files = e.dataTransfer.files;
-                handleVideoUpload(videoFileInput.files[0]);
-            }
+            if (e.dataTransfer.files.length > 0) loadVideo(e.dataTransfer.files[0]);
         });
-
         videoFileInput.addEventListener('change', (e) => {
-            if(e.target.files.length > 0) {
-                handleVideoUpload(e.target.files[0]);
-            }
+            if (e.target.files.length > 0) loadVideo(e.target.files[0]);
         });
-
-        async function handleVideoUpload(file) {
-            if (!file.type.includes('video')) {
-                alert("Por favor, selecione um arquivo de vídeo válido.");
+ 
+        function loadVideo(file) {
+            if (!file.type.startsWith('video')) {
+                toast('Esse arquivo não parece ser um vídeo. Use .mp4, .mov ou .webm.', 'ph-warning');
                 return;
             }
-
-            // Interface Updates
-            uploadStatusPanel.classList.remove('hidden');
-            fileNameDisplay.innerText = file.name;
-            uploadPercentage.innerText = "0%";
-            uploadProgressBar.style.width = "0%";
-            uploadStatusText.innerText = `Conectando ao Render (${RENDER_BACKEND_URL})...`;
-
-            const formData = new FormData();
-            formData.append('video', file);
-
+            if (state.video?.url) URL.revokeObjectURL(state.video.url);
+            const url = URL.createObjectURL(file);
+            state.video = { file, url, duration: 0, width: 0, height: 0 };
+            state.segments = [];
+            state.markIn = null; state.markOut = null;
+            state.serverFileId = null;
+            labVideo.src = url;
+ 
+            labVideo.onloadedmetadata = () => {
+                state.video.duration = labVideo.duration;
+                state.video.width = labVideo.videoWidth;
+                state.video.height = labVideo.videoHeight;
+                $('labFileName').textContent = file.name;
+                $('labFileMeta').textContent = `${fmtTime(labVideo.duration)} · ${labVideo.videoWidth}×${labVideo.videoHeight} · ${(file.size / 1024 / 1024).toFixed(1)} MB`;
+                $('labEmptyState').classList.add('hidden');
+                $('labWorkstation').classList.remove('hidden');
+                renderSegments();
+                updateMarkInfo();
+                logActivity('Vídeo importado no Video Lab: ' + file.name);
+            };
+            labVideo.onerror = () => {
+                toast('Não conseguimos abrir esse vídeo. O formato pode não ser suportado pelo navegador.', 'ph-warning');
+            };
+        }
+ 
+        $('btnNewVideo').addEventListener('click', () => {
+            labVideo.pause();
+            $('labWorkstation').classList.add('hidden');
+            $('labEmptyState').classList.remove('hidden');
+            videoFileInput.value = '';
+        });
+ 
+        // Timeline
+        const timelineTrack = $('timelineTrack');
+        labVideo.addEventListener('timeupdate', () => {
+            if (!state.video?.duration) return;
+            $('timelinePlayhead').style.left = (labVideo.currentTime / state.video.duration * 100) + '%';
+            $('labTimecode').textContent = fmtTime(labVideo.currentTime) + ' / ' + fmtTime(state.video.duration);
+            if (state.previewEnd != null && labVideo.currentTime >= state.previewEnd) {
+                labVideo.pause();
+                state.previewEnd = null;
+            }
+        });
+        timelineTrack.addEventListener('click', (e) => {
+            if (!state.video?.duration) return;
+            const rect = timelineTrack.getBoundingClientRect();
+            labVideo.currentTime = ((e.clientX - rect.left) / rect.width) * state.video.duration;
+        });
+ 
+        // Manual marks
+        function updateMarkInfo() {
+            const parts = [];
+            if (state.markIn != null) parts.push('início ' + fmtTime(state.markIn));
+            if (state.markOut != null) parts.push('fim ' + fmtTime(state.markOut));
+            $('markInfo').textContent = parts.join(' · ');
+            $('btnAddSegment').disabled = !(state.markIn != null && state.markOut != null && state.markOut > state.markIn);
+        }
+        $('btnMarkIn').addEventListener('click', () => { state.markIn = labVideo.currentTime; updateMarkInfo(); });
+        $('btnMarkOut').addEventListener('click', () => { state.markOut = labVideo.currentTime; updateMarkInfo(); });
+        $('btnAddSegment').addEventListener('click', () => {
+            state.segments.push({
+                id: 'seg-' + Date.now(),
+                start: state.markIn, end: state.markOut,
+                label: 'Corte manual', score: null,
+                reason: 'Marcado manualmente por você.'
+            });
+            state.markIn = null; state.markOut = null;
+            updateMarkInfo();
+            renderSegments();
+        });
+ 
+        // AI moment finding
+        $('btnFindMoments').addEventListener('click', async () => {
+            if (!state.video) return;
+            if (!state.settings.apiKey) {
+                openSettings();
+                toast('Configure sua chave da OpenRouter para usar a análise.', 'ph-key');
+                return;
+            }
+            const context = $('labContext').value.trim();
+            if (!context) {
+                toast('Descreva o que acontece no vídeo — a análise precisa desse contexto.', 'ph-info');
+                $('labContext').focus();
+                return;
+            }
+            const btn = $('btnFindMoments');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-1" aria-hidden="true"></i>Procurando momentos de alta retenção...';
             try {
-                // Simulação da Barra de Progresso enquanto o arquivo sobe
-                let progress = 0;
-                const progressInterval = setInterval(() => {
-                    progress += Math.random() * 15;
-                    if (progress > 90) progress = 90; // Pausa no 90% esperando a resposta real do servidor
-                    uploadPercentage.innerText = Math.round(progress) + "%";
-                    uploadProgressBar.style.width = progress + "%";
-                    uploadStatusText.innerText = "Enviando arquivo e aguardando processamento FFmpeg...";
-                }, 800);
-
-                // O DISPARO REAL PARA O RENDER
-                const response = await fetch(`${RENDER_BACKEND_URL}/upload`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                clearInterval(progressInterval);
-
-                if (!response.ok) {
-                    throw new Error(`Servidor retornou erro: ${response.status}`);
-                }
-
-                const data = await response.json();
-                
-                // Sucesso
-                uploadPercentage.innerText = "100%";
-                uploadProgressBar.style.width = "100%";
-                uploadStatusText.innerText = "Processamento concluído com sucesso!";
-                uploadProgressBar.classList.replace('bg-emerald-500', 'bg-blue-500');
-
-                // Aqui você pode adicionar lógica futura para exibir os cortes ou gerar links para download.
-                console.log("Resposta do Render:", data);
-
+                const dur = Math.floor(state.video.duration);
+                const raw = await callOpenRouter([
+                    {
+                        role: 'system',
+                        content: 'Você é um editor de vídeos virais. Com base na descrição do criador e na duração total do vídeo, proponha de 2 a 4 janelas de corte para vídeos curtos (TikTok/Shorts/Reels). Responda APENAS com JSON válido no formato {"segments":[{"start":segundos,"end":segundos,"label":"nome curto","score":0-100,"reason":"explicação curta do porquê e do potencial"}]}. Regras: start e end são números inteiros em segundos, dentro da duração total; cada corte entre 15 e 60 segundos; o score reflete potencial de retenção com base na descrição; a explicação deve citar hook e payoff. Sem texto fora do JSON.'
+                    },
+                    { role: 'user', content: `Duração total do vídeo: ${dur} segundos. Descrição do criador: ${context}` }
+                ], { json: true });
+ 
+                const match = raw.match(/\{[\s\S]*\}/);
+                if (!match) throw new Error('A resposta da análise veio em formato inesperado. Tente novamente.');
+                const parsed = JSON.parse(match[0]);
+                const segs = (parsed.segments || []).filter(s =>
+                    typeof s.start === 'number' && typeof s.end === 'number' &&
+                    s.end > s.start && s.start >= 0 && s.end <= state.video.duration + 1
+                );
+                if (!segs.length) throw new Error('Nenhum corte válido foi sugerido. Tente detalhar melhor a descrição.');
+                segs.forEach(s => state.segments.push({
+                    id: 'seg-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+                    start: Math.max(0, s.start),
+                    end: Math.min(state.video.duration, s.end),
+                    label: s.label || 'Momento sugerido',
+                    score: typeof s.score === 'number' ? Math.round(s.score) : null,
+                    reason: s.reason || ''
+                }));
+                renderSegments();
+                logActivity(segs.length + ' momentos sugeridos para ' + state.video.file.name);
+                toast(segs.length + ' momentos encontrados.', 'ph-check-circle');
             } catch (error) {
-                uploadStatusText.innerText = `Erro na conexão: O servidor Render pode estar dormindo ou o endpoint /upload não foi encontrado.`;
-                uploadProgressBar.classList.replace('bg-emerald-500', 'bg-red-500');
-                uploadPercentage.innerText = "Erro";
-                console.error("Erro no Video Lab:", error);
+                toast(error.message, 'ph-warning');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ph ph-magnifying-glass mr-1" aria-hidden="true"></i>Encontrar momentos';
+            }
+        });
+ 
+        function renderSegments() {
+            // timeline markers
+            timelineTrack.querySelectorAll('.timeline-segment').forEach(el => el.remove());
+            if (state.video?.duration) {
+                state.segments.forEach(seg => {
+                    const el = document.createElement('div');
+                    el.className = 'timeline-segment';
+                    el.style.left = (seg.start / state.video.duration * 100) + '%';
+                    el.style.width = (Math.max(0.5, (seg.end - seg.start) / state.video.duration * 100)) + '%';
+                    el.title = `${seg.label} (${fmtTime(seg.start)}–${fmtTime(seg.end)})`;
+                    el.addEventListener('click', (e) => { e.stopPropagation(); previewSegment(seg.id); });
+                    timelineTrack.appendChild(el);
+                });
+            }
+ 
+            // list
+            const list = $('segmentsList');
+            if (!state.segments.length) {
+                list.innerHTML = '<p class="text-sm text-zinc-600">Nenhum corte ainda. Use "Encontrar momentos" ou marque início e fim manualmente.</p>';
+                return;
+            }
+            list.innerHTML = state.segments.map(seg => `
+                <div class="glass-card p-4 flex items-start gap-4" data-seg="${seg.id}">
+                    <div class="shrink-0 text-center w-14">
+                        ${seg.score != null
+                            ? `<p class="text-xl font-semibold ${seg.score >= 75 ? 'text-emerald-500' : 'text-zinc-200'}">${seg.score}</p><p class="text-[9px] text-zinc-500 uppercase tracking-wider">Score</p>`
+                            : `<i class="ph ph-scissors text-zinc-500 text-xl" aria-hidden="true"></i>`}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <p class="text-sm font-medium text-white truncate">${escapeHtml(seg.label)}</p>
+                            <span class="text-xs text-zinc-500 tabular-nums shrink-0">${fmtTime(seg.start)}–${fmtTime(seg.end)} · ${Math.round(seg.end - seg.start)}s</span>
+                            ${seg.renderedUrl ? `<span class="text-[10px] text-emerald-500 shrink-0 flex items-center gap-1"><i class="ph ph-check-circle" aria-hidden="true"></i>Editado</span>` : ''}
+                        </div>
+                        ${seg.reason ? `<p class="text-xs text-zinc-500 leading-relaxed">${escapeHtml(seg.reason)}</p>` : ''}
+                        <div class="flex flex-wrap items-center gap-2 mt-3">
+                            <button class="btn-secondary !py-1 !px-3 !text-xs" data-action="preview" data-id="${seg.id}">Prévia</button>
+                            <button class="btn-primary !py-1 !px-3 !text-xs" data-action="render" data-id="${seg.id}"><i class="ph ph-magic-wand mr-1" aria-hidden="true"></i>Editar &amp; renderizar</button>
+                            <button class="btn-secondary !py-1 !px-3 !text-xs" data-action="save" data-id="${seg.id}">Salvar na biblioteca</button>
+                            <button class="btn-secondary !py-1 !px-3 !text-xs" data-action="remove" data-id="${seg.id}" aria-label="Remover corte">Remover</button>
+                            ${seg.renderedUrl ? `<a href="${seg.renderedUrl}" target="_blank" rel="noopener" class="text-[11px] text-emerald-500 underline">Baixar vídeo editado</a>` : ''}
+                        </div>
+                    </div>
+                </div>`).join('');
+ 
+            list.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const { action, id } = btn.dataset;
+                    if (action === 'preview') previewSegment(id);
+                    if (action === 'render') openRenderModal(id);
+                    if (action === 'save') saveSegmentToLibrary(id);
+                    if (action === 'remove') { state.segments = state.segments.filter(s => s.id !== id); renderSegments(); }
+                });
+            });
+        }
+ 
+        function previewSegment(id) {
+            const seg = state.segments.find(s => s.id === id);
+            if (!seg) return;
+            labVideo.currentTime = seg.start;
+            state.previewEnd = seg.end;
+            labVideo.play();
+        }
+ 
+        async function captureThumbnail(time) {
+            return new Promise((resolve) => {
+                const onSeeked = () => {
+                    labVideo.removeEventListener('seeked', onSeeked);
+                    try {
+                        const canvas = document.createElement('canvas');
+                        const scale = 320 / labVideo.videoWidth;
+                        canvas.width = 320;
+                        canvas.height = Math.round(labVideo.videoHeight * scale);
+                        canvas.getContext('2d').drawImage(labVideo, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.6));
+                    } catch { resolve(null); }
+                };
+                labVideo.addEventListener('seeked', onSeeked);
+                labVideo.currentTime = time;
+            });
+        }
+ 
+        async function saveSegmentToLibrary(id) {
+            const seg = state.segments.find(s => s.id === id);
+            if (!seg) return;
+            const wasPlaying = !labVideo.paused;
+            labVideo.pause();
+            const thumb = await captureThumbnail(seg.start + (seg.end - seg.start) / 2);
+            state.clips.push({
+                id: 'clip-' + Date.now(),
+                title: seg.label,
+                source: state.video.file.name,
+                start: seg.start, end: seg.end,
+                score: seg.score, reason: seg.reason,
+                thumb, status: 'draft',
+                renderedUrl: seg.renderedUrl || null,
+                topText: seg.topText || '', bottomText: seg.bottomText || '', audioStyle: seg.audioStyle || 'nenhum',
+                createdAt: Date.now()
+            });
+            saveClips();
+            updateSidebarCounts();
+            logActivity('Clip salvo na biblioteca: ' + seg.label);
+            toast('Clip salvo na biblioteca.', 'ph-check-circle');
+            if (wasPlaying) labVideo.play();
+        }
+ 
+        // Upload real (XHR com progresso real)
+        $('btnUploadToServer').addEventListener('click', () => {
+            if (!state.video) return;
+            if (!state.settings.backendUrl) {
+                openSettings();
+                toast('Informe a URL do seu backend nas Configurações.', 'ph-info');
+                return;
+            }
+            const panel = $('uploadStatusPanel');
+            panel.classList.remove('hidden');
+            const bar = $('uploadProgressBar'), pct = $('uploadPercentage'), txt = $('uploadStatusText');
+            bar.className = 'bg-emerald-500 h-1.5 rounded-full transition-all duration-300';
+            bar.style.width = '0%'; pct.textContent = '0%';
+            txt.textContent = 'Enviando ' + state.video.file.name + '...';
+ 
+            const formData = new FormData();
+            formData.append('video', state.video.file);
+ 
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', state.settings.backendUrl + '/upload');
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const p = Math.round(e.loaded / e.total * 100);
+                    bar.style.width = p + '%';
+                    pct.textContent = p + '%';
+                }
+            };
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    txt.textContent = 'Upload concluído. O servidor já pode gerar os cortes.';
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        state.serverFileId = data.file_id || data.filename || null;
+                    } catch {}
+                    toast('Vídeo enviado ao servidor.', 'ph-check-circle');
+                } else {
+                    bar.classList.replace('bg-emerald-500', 'bg-red-500');
+                    txt.textContent = 'O servidor respondeu com erro ' + xhr.status + '. Verifique se o endpoint /upload existe no seu FastAPI.';
+                }
+            };
+            xhr.onerror = () => {
+                bar.classList.replace('bg-emerald-500', 'bg-red-500');
+                txt.textContent = 'Não conseguimos falar com o servidor. No plano gratuito do Render ele hiberna — abra a URL do backend para acordá-lo e tente de novo.';
+            };
+            xhr.send(formData);
+        });
+ 
+        function uploadVideoToServer(onProgress) {
+            return new Promise((resolve, reject) => {
+                if (!state.video) { reject(new Error('Nenhum vídeo carregado.')); return; }
+                const formData = new FormData();
+                formData.append('video', state.video.file);
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', state.settings.backendUrl + '/upload');
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded / e.total * 100));
+                };
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            state.serverFileId = data.file_id || data.filename || null;
+                            if (!state.serverFileId) { reject(new Error('O servidor aceitou o upload mas não retornou um identificador de arquivo (file_id).')); return; }
+                            resolve(state.serverFileId);
+                        } catch { reject(new Error('O servidor não retornou um JSON válido para o upload.')); }
+                    } else {
+                        reject(new Error('O servidor respondeu com erro ' + xhr.status + ' ao enviar o vídeo.'));
+                    }
+                };
+                xhr.onerror = () => reject(new Error('Não conseguimos falar com o servidor de render. Se ele estiver hibernando (plano gratuito do Render), abra ' + state.settings.backendUrl + ' no navegador para acordá-lo e tente de novo.'));
+                xhr.send(formData);
+            });
+        }
+ 
+        // ================= RENDER / EDIT MODAL =================
+        let renderSegId = null;
+ 
+        function openRenderModal(segId) {
+            const seg = state.segments.find(s => s.id === segId);
+            if (!seg) return;
+            if (!state.settings.backendUrl) {
+                openSettings();
+                toast('Informe a URL do backend nas Configurações para renderizar.', 'ph-info');
+                return;
+            }
+            renderSegId = segId;
+            $('renderSubtitle').textContent = `${seg.label} · ${fmtTime(seg.start)}–${fmtTime(seg.end)}`;
+ 
+            const sug = state.teamSuggestion;
+            const useSuggestion = !!(sug && !seg._suggestionApplied && !seg.renderedUrl);
+            $('renderTopText').value = useSuggestion ? sug.topText : (seg.topText || '');
+            $('renderBottomText').value = useSuggestion ? sug.bottomText : (seg.bottomText || '');
+            $('renderAudioStyle').value = useSuggestion ? sug.audioStyle : (seg.audioStyle || 'nenhum');
+            $('renderSuggestionBanner').classList.toggle('hidden', !useSuggestion);
+            $('renderOwnAudioWrap').classList.toggle('hidden', $('renderAudioStyle').value !== 'proprio');
+            $('renderAudioFile').value = '';
+ 
+            $('renderStatusPanel').classList.add('hidden');
+            $('renderResultPanel').classList.add('hidden');
+            if (seg.renderedUrl) {
+                $('renderResultPanel').classList.remove('hidden');
+                $('renderResultVideo').src = seg.renderedUrl;
+            }
+ 
+            $('submitRender').disabled = false;
+            $('submitRender').textContent = seg.renderedUrl ? 'Renderizar de novo' : 'Renderizar vídeo';
+ 
+            $('renderModal').classList.remove('hidden');
+            $('renderModal').classList.add('flex');
+        }
+ 
+        function closeRenderModal() {
+            $('renderModal').classList.add('hidden');
+            $('renderModal').classList.remove('flex');
+        }
+        $('closeRender').addEventListener('click', closeRenderModal);
+        $('renderAudioStyle').addEventListener('change', () => {
+            $('renderOwnAudioWrap').classList.toggle('hidden', $('renderAudioStyle').value !== 'proprio');
+        });
+ 
+        async function pollRenderJob(jobId, attempts = 0) {
+            if (attempts > 40) throw new Error('O servidor demorou demais para renderizar. Tente novamente em instantes.');
+            await new Promise(r => setTimeout(r, 3000));
+            const res = await fetch(state.settings.backendUrl + '/edit/status/' + encodeURIComponent(jobId));
+            if (!res.ok) throw new Error('Não conseguimos consultar o status da renderização (erro ' + res.status + ').');
+            const data = await res.json();
+            if (data.status === 'done' && data.video_url) return data;
+            if (data.status === 'error') throw new Error(data.message || 'A renderização falhou no servidor.');
+            return pollRenderJob(jobId, attempts + 1);
+        }
+ 
+        $('submitRender').addEventListener('click', async () => {
+            const seg = state.segments.find(s => s.id === renderSegId);
+            if (!seg || !state.video) return;
+ 
+            const topText = $('renderTopText').value.trim();
+            const bottomText = $('renderBottomText').value.trim();
+            const audioStyle = $('renderAudioStyle').value;
+            const audioFile = audioStyle === 'proprio' ? $('renderAudioFile').files[0] : null;
+            if (audioStyle === 'proprio' && !audioFile) {
+                toast('Selecione o arquivo de áudio ou escolha um estilo de trilha.', 'ph-info');
+                return;
+            }
+ 
+            const btn = $('submitRender');
+            btn.disabled = true;
+            $('renderStatusPanel').classList.remove('hidden');
+            $('renderResultPanel').classList.add('hidden');
+            const statusText = $('renderStatusText');
+ 
+            try {
+                if (!state.serverFileId) {
+                    statusText.innerHTML = '<i class="ph ph-spinner animate-spin" aria-hidden="true"></i> Enviando vídeo ao servidor...';
+                    await uploadVideoToServer((p) => {
+                        statusText.innerHTML = `<i class="ph ph-spinner animate-spin" aria-hidden="true"></i> Enviando vídeo... ${p}%`;
+                    });
+                }
+ 
+                statusText.innerHTML = '<i class="ph ph-spinner animate-spin" aria-hidden="true"></i> Renderizando corte, legendas e trilha...';
+                btn.textContent = 'Renderizando...';
+ 
+                const formData = new FormData();
+                formData.append('file_id', state.serverFileId);
+                formData.append('start', seg.start);
+                formData.append('end', seg.end);
+                formData.append('top_text', topText);
+                formData.append('bottom_text', bottomText);
+                formData.append('audio_style', audioStyle);
+                if (audioFile) formData.append('audio_file', audioFile);
+ 
+                const res = await fetch(state.settings.backendUrl + '/edit', { method: 'POST', body: formData });
+                if (!res.ok) {
+                    if (res.status === 404) throw new Error('Seu backend ainda não tem o endpoint POST /edit. É ele quem precisa cortar o vídeo, gravar as legendas e misturar a trilha — configure-o para aceitar file_id, start, end, top_text, bottom_text, audio_style e audio_file, e devolver { video_url } (ou { job_id } para acompanhar o progresso).');
+                    throw new Error('O servidor respondeu com erro ' + res.status + ' ao renderizar.');
+                }
+                let data = await res.json();
+ 
+                if (data.job_id && !data.video_url) {
+                    statusText.innerHTML = '<i class="ph ph-spinner animate-spin" aria-hidden="true"></i> Processando no servidor, isso pode levar um pouco...';
+                    data = await pollRenderJob(data.job_id);
+                }
+ 
+                if (!data.video_url) throw new Error('O servidor não retornou o link do vídeo renderizado (video_url).');
+ 
+                $('renderStatusPanel').classList.add('hidden');
+                $('renderResultPanel').classList.remove('hidden');
+                $('renderResultVideo').src = data.video_url;
+ 
+                seg.renderedUrl = data.video_url;
+                seg.topText = topText; seg.bottomText = bottomText; seg.audioStyle = audioStyle;
+                seg._suggestionApplied = true;
+ 
+                renderSegments();
+                logActivity('Vídeo renderizado com legenda e trilha: ' + seg.label);
+                toast('Vídeo renderizado com sucesso.', 'ph-check-circle');
+                btn.textContent = 'Renderizar de novo';
+                btn.disabled = false;
+            } catch (error) {
+                $('renderStatusPanel').classList.add('hidden');
+                toast(error.message, 'ph-warning');
+                btn.disabled = false;
+                btn.textContent = 'Renderizar vídeo';
+            }
+        });
+ 
+        // ================= MEME LAB =================
+        const memeCanvas = $('memeCanvas');
+        const memeState = { img: null, fileName: '' };
+ 
+        function wrapMemeLines(ctx, text, maxWidth) {
+            const words = text.split(/\s+/).filter(Boolean);
+            const lines = [];
+            let current = '';
+            words.forEach(word => {
+                const test = current ? current + ' ' + word : word;
+                if (ctx.measureText(test).width > maxWidth && current) {
+                    lines.push(current);
+                    current = word;
+                } else {
+                    current = test;
+                }
+            });
+            if (current) lines.push(current);
+            return lines;
+        }
+ 
+        function drawMeme() {
+            if (!memeState.img) return;
+            const img = memeState.img;
+            const maxW = 900;
+            const scale = Math.min(1, maxW / img.naturalWidth);
+            memeCanvas.width = Math.round(img.naturalWidth * scale);
+            memeCanvas.height = Math.round(img.naturalHeight * scale);
+            const ctx = memeCanvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, memeCanvas.width, memeCanvas.height);
+ 
+            const topText = $('memeTopText').value.trim().toUpperCase();
+            const bottomText = $('memeBottomText').value.trim().toUpperCase();
+            if (!topText && !bottomText) return;
+ 
+            const fontSize = Math.max(20, Math.round(memeCanvas.width / 12));
+            ctx.font = '900 ' + fontSize + 'px "Arial Black", Impact, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = Math.max(2, Math.round(fontSize / 11));
+            ctx.lineJoin = 'round';
+            const maxTextWidth = memeCanvas.width * 0.92;
+            const lineHeight = fontSize * 1.12;
+            const cx = memeCanvas.width / 2;
+ 
+            if (topText) {
+                ctx.textBaseline = 'top';
+                wrapMemeLines(ctx, topText, maxTextWidth).forEach((line, i) => {
+                    const y = fontSize * 0.4 + i * lineHeight;
+                    ctx.strokeText(line, cx, y);
+                    ctx.fillText(line, cx, y);
+                });
+            }
+            if (bottomText) {
+                ctx.textBaseline = 'bottom';
+                const lines = wrapMemeLines(ctx, bottomText, maxTextWidth);
+                lines.forEach((line, i) => {
+                    const y = memeCanvas.height - fontSize * 0.4 - (lines.length - 1 - i) * lineHeight;
+                    ctx.strokeText(line, cx, y);
+                    ctx.fillText(line, cx, y);
+                });
             }
         }
+ 
+        function loadMemeImage(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                toast('Esse arquivo não é uma imagem. Use PNG, JPG ou WebP.', 'ph-warning');
+                return;
+            }
+            const img = new Image();
+            img.onload = () => {
+                memeState.img = img;
+                memeState.fileName = file.name;
+                $('memeFileName').textContent = file.name;
+                $('memeFileMeta').textContent = img.naturalWidth + '×' + img.naturalHeight + ' px';
+                $('memeEmptyState').classList.add('hidden');
+                $('memeWorkstation').classList.remove('hidden');
+                drawMeme();
+            };
+            img.onerror = () => toast('Não conseguimos abrir essa imagem. Tente outro arquivo.', 'ph-warning');
+            img.src = URL.createObjectURL(file);
+        }
+ 
+        $('btnBrowseMeme').addEventListener('click', (e) => { e.stopPropagation(); $('memeFileInput').click(); });
+        $('memeUploadZone').addEventListener('click', () => $('memeFileInput').click());
+        $('memeUploadZone').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('memeFileInput').click(); });
+        $('memeUploadZone').addEventListener('dragover', (e) => e.preventDefault());
+        $('memeUploadZone').addEventListener('drop', (e) => {
+            e.preventDefault();
+            loadMemeImage(e.dataTransfer.files[0]);
+        });
+        $('memeFileInput').addEventListener('change', (e) => loadMemeImage(e.target.files[0]));
+        $('btnNewMemeImage').addEventListener('click', () => {
+            memeState.img = null;
+            $('memeFileInput').value = '';
+            $('memeWorkstation').classList.add('hidden');
+            $('memeEmptyState').classList.remove('hidden');
+        });
+        $('memeTopText').addEventListener('input', drawMeme);
+        $('memeBottomText').addEventListener('input', drawMeme);
+ 
+        $('btnMemeSuggest').addEventListener('click', async () => {
+            if (!state.settings.apiKey) {
+                openSettings();
+                toast('Configure sua chave da OpenRouter para gerar legendas.', 'ph-info');
+                return;
+            }
+            const context = $('memeContext').value.trim();
+            if (!context) {
+                toast('Descreva o que aparece na imagem para a IA legendar.', 'ph-info');
+                $('memeContext').focus();
+                return;
+            }
+            const niche = { games: 'games e streaming', tech: 'tecnologia', geral: 'internet em geral' }[$('memeNiche').value];
+            const btn = $('btnMemeSuggest');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-circle-notch animate-spin mr-1" aria-hidden="true"></i>Pensando...';
+            try {
+                const raw = await callOpenRouter([
+                    {
+                        role: 'system',
+                        content: 'Você cria legendas de memes em Português do Brasil para criadores de conteúdo do nicho de ' + niche + '. Formato clássico: texto de cima arma a situação, texto de baixo entrega a punchline. Humor de comunidade, referências que gamers e pessoas de tech reconhecem, sem ofensas e sem emojis. Cada texto deve ter no máximo 60 caracteres. Responda APENAS com JSON válido no formato {"memes":[{"top":"...","bottom":"..."},{"top":"...","bottom":"..."},{"top":"...","bottom":"..."}]}. O texto de cima ou o de baixo pode ser uma string vazia quando o meme funcionar com um texto só.'
+                    },
+                    { role: 'user', content: 'O que aparece na imagem: ' + context }
+                ], { json: true });
+                const parsed = JSON.parse(raw.replace(/^```(json)?|```$/g, '').trim());
+                const memes = (parsed.memes || []).filter(m => (m.top || m.bottom)).slice(0, 4);
+                if (!memes.length) throw new Error('vazio');
+                $('memeSuggestions').classList.remove('hidden');
+                $('memeSuggestionList').innerHTML = memes.map((m, i) => `
+                    <button class="w-full text-left glass-card p-3 hover:border-emerald-500/50 transition-colors" data-meme-idx="${i}">
+                        ${m.top ? `<p class="text-xs text-zinc-200 font-semibold uppercase">${escapeHtml(m.top)}</p>` : ''}
+                        ${m.bottom ? `<p class="text-xs text-zinc-400 uppercase">${escapeHtml(m.bottom)}</p>` : ''}
+                    </button>`).join('');
+                $('memeSuggestionList').querySelectorAll('[data-meme-idx]').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const m = memes[Number(el.dataset.memeIdx)];
+                        $('memeTopText').value = m.top || '';
+                        $('memeBottomText').value = m.bottom || '';
+                        drawMeme();
+                    });
+                });
+            } catch (err) {
+                toast(err.message === 'vazio' ? 'A IA não retornou sugestões. Tente reformular a descrição.' : err.message, 'ph-warning');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ph ph-sparkle mr-1" aria-hidden="true"></i>Sugerir legendas';
+            }
+        });
+ 
+        $('btnMemeDownload').addEventListener('click', () => {
+            if (!memeState.img) return;
+            drawMeme();
+            const link = document.createElement('a');
+            link.download = 'meme-viralize-' + Date.now() + '.png';
+            link.href = memeCanvas.toDataURL('image/png');
+            link.click();
+            logActivity('Meme exportado: ' + memeState.fileName);
+        });
+ 
+        $('btnMemeSave').addEventListener('click', () => {
+            if (!memeState.img) return;
+            drawMeme();
+            state.memes.push({
+                id: 'meme-' + Date.now(),
+                top: $('memeTopText').value.trim(),
+                bottom: $('memeBottomText').value.trim(),
+                source: memeState.fileName,
+                thumb: memeCanvas.toDataURL('image/jpeg', 0.7),
+                createdAt: Date.now()
+            });
+            if (!saveMemes()) { state.memes.pop(); return; }
+            updateSidebarCounts();
+            logActivity('Meme salvo na biblioteca');
+            toast('Meme salvo na biblioteca.', 'ph-check-circle');
+        });
+ 
+        // ================= LIBRARY =================
+        function updateSidebarCounts() {
+            const total = state.clips.length + state.memes.length;
+            $('libraryCount').textContent = total ? total : '';
+        }
+ 
+        function renderLibrary() {
+            const filter = $('libraryFilter').value;
+            const clips = filter === 'meme' ? [] : state.clips.filter(c => filter === 'all' || c.status === filter);
+            const memes = (filter === 'all' || filter === 'meme') ? state.memes : [];
+            const empty = $('libraryEmpty'), grid = $('libraryGrid');
+            if (!clips.length && !memes.length) {
+                empty.classList.remove('hidden');
+                grid.classList.add('hidden');
+                empty.querySelector('p').textContent = (state.clips.length + state.memes.length) ? 'Nada nesse filtro.' : 'Sua biblioteca está vazia.';
+                return;
+            }
+            empty.classList.add('hidden');
+            grid.classList.remove('hidden');
+            const memeCards = memes.map(m => `
+                <div class="glass-card overflow-hidden">
+                    <div class="aspect-video bg-zinc-900 flex items-center justify-center">
+                        <img src="${m.thumb}" alt="" class="w-full h-full object-contain">
+                    </div>
+                    <div class="p-3">
+                        <p class="text-sm font-medium text-white truncate mb-1">${escapeHtml(m.top || m.bottom || 'Meme')}</p>
+                        <p class="text-[11px] text-zinc-500 truncate mb-1">${escapeHtml(m.source)}</p>
+                        <p class="text-[11px] text-zinc-500 mb-3">Meme</p>
+                        <div class="flex gap-2">
+                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-meme-action="download" data-id="${m.id}">Baixar</button>
+                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-meme-action="delete" data-id="${m.id}">Excluir</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+            grid.innerHTML = memeCards + clips.map(c => `
+                <div class="glass-card overflow-hidden">
+                    <div class="aspect-video bg-zinc-900 flex items-center justify-center">
+                        ${c.thumb ? `<img src="${c.thumb}" alt="" class="w-full h-full object-cover">` : `<i class="ph ph-film-strip text-2xl text-zinc-700" aria-hidden="true"></i>`}
+                    </div>
+                    <div class="p-3">
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <p class="text-sm font-medium text-white truncate">${escapeHtml(c.title)}</p>
+                            ${c.score != null ? `<span class="text-xs font-semibold ${c.score >= 75 ? 'text-emerald-500' : 'text-zinc-400'} shrink-0">${c.score}</span>` : ''}
+                        </div>
+                        <p class="text-[11px] text-zinc-500 truncate mb-1">${escapeHtml(c.source)} · ${fmtTime(c.start)}–${fmtTime(c.end)}</p>
+                        <p class="text-[11px] ${c.status === 'scheduled' ? 'text-emerald-500' : 'text-zinc-500'} mb-1">${c.status === 'scheduled' ? 'Agendado' : 'Rascunho'}</p>
+                        <p class="text-[11px] ${c.renderedUrl ? 'text-emerald-500' : 'text-zinc-600'} mb-3">${c.renderedUrl ? '✓ Editado com legenda e trilha' : 'Sem edição aplicada'}</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-lib-action="schedule" data-id="${c.id}">Planejar</button>
+                            ${c.renderedUrl ? `<a href="${c.renderedUrl}" target="_blank" rel="noopener" class="btn-secondary !py-1 !px-2 !text-[11px]">Baixar</a>` : ''}
+                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-lib-action="delete" data-id="${c.id}">Excluir</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+ 
+            grid.querySelectorAll('button[data-lib-action]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const { libAction, id } = btn.dataset;
+                    if (libAction === 'delete') {
+                        state.clips = state.clips.filter(c => c.id !== id);
+                        state.schedule = state.schedule.filter(s => s.clipId !== id);
+                        saveClips(); saveSchedule();
+                        updateSidebarCounts();
+                        renderLibrary();
+                        toast('Clip removido.', 'ph-trash');
+                    }
+                    if (libAction === 'schedule') openScheduleModal(new Date(), id);
+                });
+            });
+ 
+            grid.querySelectorAll('button[data-meme-action]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const { memeAction, id } = btn.dataset;
+                    const meme = state.memes.find(m => m.id === id);
+                    if (!meme) return;
+                    if (memeAction === 'delete') {
+                        state.memes = state.memes.filter(m => m.id !== id);
+                        saveMemes();
+                        updateSidebarCounts();
+                        renderLibrary();
+                        toast('Meme removido.', 'ph-trash');
+                    }
+                    if (memeAction === 'download') {
+                        const link = document.createElement('a');
+                        link.download = 'meme-viralize-' + id + '.jpg';
+                        link.href = meme.thumb;
+                        link.click();
+                    }
+                });
+            });
+        }
+        $('libraryFilter').addEventListener('change', renderLibrary);
+ 
+        // ================= CALENDAR =================
+        const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+ 
+        function renderCalendar() {
+            $('calTitle').textContent = MONTHS[state.calMonth] + ' ' + state.calYear;
+            const first = new Date(state.calYear, state.calMonth, 1);
+            const daysInMonth = new Date(state.calYear, state.calMonth + 1, 0).getDate();
+            const startDow = first.getDay();
+            const today = new Date();
+            const cells = [];
+            for (let i = 0; i < startDow; i++) cells.push('<div class="bg-[#0c0c0e] min-h-[88px]"></div>');
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateKey = `${state.calYear}-${String(state.calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const isToday = today.getFullYear() === state.calYear && today.getMonth() === state.calMonth && today.getDate() === d;
+                const posts = state.schedule.filter(s => s.date === dateKey);
+                cells.push(`
+                    <div class="bg-[#0c0c0e] min-h-[88px] p-1.5 hover:bg-[#101014] cursor-pointer transition-colors" data-date="${dateKey}" role="button" tabindex="0" aria-label="Planejar para ${d} de ${MONTHS[state.calMonth]}">
+                        <p class="text-[11px] ${isToday ? 'text-emerald-500 font-semibold' : 'text-zinc-500'} mb-1">${d}</p>
+                        ${posts.map(p => `<div class="text-[10px] text-zinc-300 bg-[#18181b] border border-[#27272a] rounded px-1.5 py-0.5 mb-1 truncate" title="${escapeHtml(p.clipTitle)} · ${p.platform} ${p.time}">${p.time} · ${escapeHtml(p.platform)}</div>`).join('')}
+                    </div>`);
+            }
+            $('calGrid').innerHTML = cells.join('');
+            $('calGrid').querySelectorAll('[data-date]').forEach(cell => {
+                const open = () => {
+                    if (!state.clips.length) {
+                        toast('Salve um clip na biblioteca antes de planejar publicações.', 'ph-info');
+                        return;
+                    }
+                    openScheduleModal(new Date(cell.dataset.date + 'T12:00:00'));
+                };
+                cell.addEventListener('click', open);
+                cell.addEventListener('keydown', (e) => { if (e.key === 'Enter') open(); });
+            });
+        }
+        $('calPrev').addEventListener('click', () => {
+            state.calMonth--;
+            if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
+            renderCalendar();
+        });
+        $('calNext').addEventListener('click', () => {
+            state.calMonth++;
+            if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+            renderCalendar();
+        });
+ 
+        let scheduleDate = null;
+        function openScheduleModal(date, preselectClipId = null) {
+            if (!state.clips.length) {
+                toast('Salve um clip na biblioteca antes de planejar publicações.', 'ph-info');
+                return;
+            }
+            scheduleDate = date;
+            $('scheduleSubtitle').textContent = 'Para ' + date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) + '.';
+            $('scheduleClip').innerHTML = state.clips.map(c =>
+                `<option value="${c.id}" ${c.id === preselectClipId ? 'selected' : ''}>${escapeHtml(c.title)} (${fmtTime(c.start)}–${fmtTime(c.end)})</option>`).join('');
+            $('scheduleModal').classList.remove('hidden');
+            $('scheduleModal').classList.add('flex');
+        }
+        function closeScheduleModal() {
+            $('scheduleModal').classList.add('hidden');
+            $('scheduleModal').classList.remove('flex');
+        }
+        $('closeSchedule').addEventListener('click', closeScheduleModal);
+        $('saveSchedule').addEventListener('click', () => {
+            const clipId = $('scheduleClip').value;
+            const clip = state.clips.find(c => c.id === clipId);
+            if (!clip || !scheduleDate) return;
+            const dateKey = `${scheduleDate.getFullYear()}-${String(scheduleDate.getMonth() + 1).padStart(2, '0')}-${String(scheduleDate.getDate()).padStart(2, '0')}`;
+            state.schedule.push({
+                id: 'post-' + Date.now(),
+                clipId, clipTitle: clip.title,
+                platform: $('schedulePlatform').value,
+                time: $('scheduleTime').value,
+                date: dateKey
+            });
+            clip.status = 'scheduled';
+            saveClips(); saveSchedule();
+            logActivity('Publicação planejada: ' + clip.title + ' → ' + $('schedulePlatform').value);
+            closeScheduleModal();
+            renderCalendar();
+            toast('Publicação adicionada ao calendário.', 'ph-calendar-check');
+        });
+ 
+        // ================= ANALYTICS =================
+        function renderAnalytics() {
+            $('anClips').textContent = state.clips.length;
+            const scores = state.clips.filter(c => c.score != null).map(c => c.score);
+            $('anScore').textContent = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : '—';
+            const durations = state.clips.map(c => c.end - c.start);
+            $('anDuration').textContent = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) + 's' : '—';
+ 
+            let insight;
+            if (!state.clips.length) {
+                insight = 'Ainda não há dados do seu trabalho. Analise um briefing na Sala de Guerra e salve os primeiros cortes no Video Lab — as leituras da equipe aparecem aqui conforme você produz.';
+            } else {
+                const best = [...state.clips].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
+                const scheduled = state.schedule.length;
+                insight = `Você já tem ${state.clips.length} ${state.clips.length === 1 ? 'clip' : 'clips'} na biblioteca.` +
+                    (best?.score != null ? ` O de maior potencial é "${best.title}" (score ${best.score}).` : '') +
+                    (scheduled ? ` ${scheduled} ${scheduled === 1 ? 'publicação planejada' : 'publicações planejadas'} no calendário.` : ' Nenhuma publicação planejada ainda — abra o Calendário para organizar a distribuição.');
+            }
+            $('anInsight').textContent = insight;
+        }
+ 
+        // ================= HOME =================
+        function renderHome() {
+            const h = new Date().getHours();
+            const greet = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+            $('homeGreeting').textContent = greet + ', Creator';
+            $('statBriefings').textContent = state.briefingCount;
+            $('statClips').textContent = state.clips.length;
+            $('statScheduled').textContent = state.schedule.length;
+ 
+            let next;
+            if (!state.settings.apiKey) {
+                next = '<button class="btn-primary" id="homeCtaSettings">Configurar a engine de IA</button><p class="text-xs text-zinc-500 mt-2">Adicione sua chave da OpenRouter para ativar a equipe.</p>';
+            } else if (!state.briefingCount) {
+                next = '<button class="btn-primary" data-goto="war-room">Enviar o primeiro briefing</button><p class="text-xs text-zinc-500 mt-2">Conte para a equipe o que você gravou.</p>';
+            } else if (!state.clips.length) {
+                next = '<button class="btn-primary" data-goto="video-lab">Marcar cortes no Video Lab</button><p class="text-xs text-zinc-500 mt-2">Importe o vídeo e salve os melhores momentos.</p>';
+            } else if (!state.schedule.length) {
+                next = '<button class="btn-primary" data-goto="calendar">Planejar as publicações</button><p class="text-xs text-zinc-500 mt-2">Organize quando cada clip vai ao ar.</p>';
+            } else {
+                next = '<p class="text-sm text-zinc-300">Fluxo em andamento. Continue enviando briefings ou revise o calendário.</p>';
+            }
+            $('homeNextStep').innerHTML = next;
+            $('homeNextStep').querySelectorAll('[data-goto]').forEach(btn =>
+                btn.addEventListener('click', () => showView(btn.dataset.goto)));
+            $('homeNextStep').querySelector('#homeCtaSettings')?.addEventListener('click', openSettings);
+ 
+            const act = $('homeActivity');
+            if (!state.activity.length) {
+                act.innerHTML = '<p class="text-sm text-zinc-600 py-4">Nenhuma atividade ainda.</p>';
+            } else {
+                act.innerHTML = state.activity.map(a => `
+                    <div class="py-3 flex items-center gap-3">
+                        <span class="text-sm text-zinc-300 flex-1 min-w-0 truncate">${escapeHtml(a.text)}</span>
+                        <span class="text-[11px] text-zinc-600 shrink-0">${new Date(a.at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} ${new Date(a.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>`).join('');
+            }
+        }
+ 
+        // ================= AUTH (Supabase) =================
+        let sb = null;
+        let authMode = 'signin'; // signin | signup
+ 
+        function showAuthOverlay(show) {
+            $('authOverlay').classList.toggle('hidden', !show);
+            $('authOverlay').classList.toggle('flex', show);
+        }
+ 
+        function authFeedback(error, info) {
+            $('authError').textContent = error || '';
+            $('authError').classList.toggle('hidden', !error);
+            $('authInfo').textContent = info || '';
+            $('authInfo').classList.toggle('hidden', !info);
+        }
+ 
+        function renderSidebarUser() {
+            const email = state.session?.user?.email;
+            $('userName').textContent = email ? email.split('@')[0] : 'Creator';
+            $('userSub').textContent = email ? email : 'Sessão local';
+            $('btnLogout').classList.toggle('hidden', !email);
+            const planLabel = { free: '', creator: 'Creator', pro: 'Pro' }[state.plan] || '';
+            $('planBadge').textContent = planLabel;
+        }
+ 
+        async function loadProfilePlan() {
+            state.plan = 'free';
+            if (sb && state.session) {
+                try {
+                    const { data } = await sb.from('profiles').select('plan').eq('id', state.session.user.id).maybeSingle();
+                    if (data?.plan) state.plan = data.plan;
+                } catch { /* tabela ainda não criada — mantém free */ }
+            }
+            renderSidebarUser();
+        }
+ 
+        function initAuth() {
+            const { supabaseUrl, supabaseKey } = state.settings;
+            if (!supabaseUrl || !supabaseKey || !window.supabase) {
+                sb = null; state.session = null; state.plan = 'free';
+                showAuthOverlay(false);
+                renderSidebarUser();
+                return;
+            }
+            try {
+                sb = window.supabase.createClient(supabaseUrl, supabaseKey);
+            } catch {
+                toast('URL ou chave do Supabase inválida.', 'ph-warning');
+                return;
+            }
+            sb.auth.getSession().then(({ data: { session } }) => {
+                state.session = session;
+                if (!session && !state.authSkipped) showAuthOverlay(true);
+                else showAuthOverlay(false);
+                loadProfilePlan();
+            });
+            sb.auth.onAuthStateChange((_event, session) => {
+                state.session = session;
+                if (session) {
+                    showAuthOverlay(false);
+                    toast('Sessão iniciada.', 'ph-check-circle');
+                }
+                loadProfilePlan();
+            });
+        }
+ 
+        $('authToggleMode').addEventListener('click', () => {
+            authMode = authMode === 'signin' ? 'signup' : 'signin';
+            $('authTitle').textContent = authMode === 'signin' ? 'Entrar' : 'Criar conta';
+            $('authSubtitle').textContent = authMode === 'signin'
+                ? 'Use seu e-mail e senha para acessar o workspace.'
+                : 'Crie sua conta para salvar seu trabalho na nuvem.';
+            $('authSubmit').textContent = authMode === 'signin' ? 'Entrar' : 'Criar conta';
+            $('authToggleMode').textContent = authMode === 'signin' ? 'Criar conta' : 'Já tenho conta';
+            authFeedback('', '');
+        });
+ 
+        $('authSubmit').addEventListener('click', async () => {
+            if (!sb) return;
+            const email = $('authEmail').value.trim();
+            const password = $('authPassword').value;
+            if (!email || !password) { authFeedback('Preencha e-mail e senha.'); return; }
+            $('authSubmit').disabled = true;
+            try {
+                if (authMode === 'signin') {
+                    const { error } = await sb.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                } else {
+                    const { data, error } = await sb.auth.signUp({ email, password });
+                    if (error) throw error;
+                    if (!data.session) authFeedback('', 'Conta criada. Confirme pelo link enviado ao seu e-mail para entrar.');
+                }
+            } catch (error) {
+                const msg = /invalid login/i.test(error.message) ? 'E-mail ou senha incorretos.'
+                    : /already registered/i.test(error.message) ? 'Esse e-mail já tem conta. Use "Entrar".'
+                    : /at least 6/i.test(error.message) ? 'A senha precisa de pelo menos 6 caracteres.'
+                    : error.message;
+                authFeedback(msg);
+            } finally {
+                $('authSubmit').disabled = false;
+            }
+        });
+ 
+        $('authForgot').addEventListener('click', async () => {
+            if (!sb) return;
+            const email = $('authEmail').value.trim();
+            if (!email) { authFeedback('Digite seu e-mail acima para receber o link de recuperação.'); return; }
+            const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+            if (error) authFeedback(error.message);
+            else authFeedback('', 'Enviamos um link de recuperação para ' + email + '.');
+        });
+ 
+        $('authSkip').addEventListener('click', () => {
+            state.authSkipped = true;
+            store.set('authSkipped', true);
+            showAuthOverlay(false);
+            toast('Modo local: seu trabalho fica salvo apenas neste navegador.', 'ph-info');
+        });
+ 
+        $('btnLogout').addEventListener('click', async () => {
+            if (!sb) return;
+            await sb.auth.signOut();
+            state.session = null; state.plan = 'free';
+            state.authSkipped = false;
+            store.set('authSkipped', false);
+            renderSidebarUser();
+            showAuthOverlay(true);
+        });
+ 
+        // ================= PLAN / BILLING (Mercado Pago via backend) =================
+        const PLAN_NAMES = { free: 'Free', creator: 'Creator', pro: 'Pro' };
+ 
+        function renderPlan() {
+            $('planCurrent').textContent = PLAN_NAMES[state.plan] || 'Free';
+            document.querySelectorAll('button[data-plan]').forEach(btn => {
+                const isCurrent = btn.dataset.plan === state.plan;
+                btn.disabled = isCurrent;
+                btn.textContent = isCurrent ? 'Plano atual' : 'Assinar ' + PLAN_NAMES[btn.dataset.plan];
+            });
+        }
+ 
+        document.querySelectorAll('button[data-plan]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const plan = btn.dataset.plan;
+                if (!state.settings.backendUrl) {
+                    openSettings();
+                    toast('Configure a URL do backend para ativar a assinatura.', 'ph-info');
+                    return;
+                }
+                if (sb && !state.session) {
+                    showAuthOverlay(true);
+                    toast('Entre na sua conta antes de assinar.', 'ph-info');
+                    return;
+                }
+                btn.disabled = true;
+                const original = btn.textContent;
+                btn.textContent = 'Abrindo checkout...';
+                try {
+                    const res = await fetch(state.settings.backendUrl + '/billing/checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ plan, email: state.session?.user?.email || '', user_id: state.session?.user?.id || '' })
+                    });
+                    if (!res.ok) throw new Error('O backend respondeu com erro ' + res.status + '. Verifique se o endpoint /billing/checkout está publicado.');
+                    const data = await res.json();
+                    if (!data.init_point) throw new Error('O backend não retornou o link de pagamento (init_point).');
+                    window.open(data.init_point, '_blank');
+                    toast('Checkout do Mercado Pago aberto em nova aba.', 'ph-check-circle');
+                } catch (error) {
+                    toast(error.message, 'ph-warning');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = original;
+                    renderPlan();
+                }
+            });
+        });
+ 
+        // ================= INIT =================
+        renderAgentList();
+        refreshEngineStatus();
+        updateSidebarCounts();
+        checkBackend();
+        renderSidebarUser();
+        initAuth();
     </script>
 </body>
 </html>
+ 
