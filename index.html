@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+<!DOCTYPE>
+>html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -736,23 +737,50 @@
                 try {
                     const raw = localStorage.getItem('viralize.' + key);
                     return raw ? JSON.parse(raw) : fallback;
-                } catch { return fallback; }
+                } catch (e) {
+                    console.warn('Erro ao ler localStorage:', e);
+                    return fallback;
+                }
             },
             set(key, value) {
-                localStorage.setItem('viralize.' + key, JSON.stringify(value));
+                try {
+                    localStorage.setItem('viralize.' + key, JSON.stringify(value));
+                } catch (e) {
+                    console.error('Erro ao salvar no localStorage:', e);
+                }
             }
         };
 
+        const defaultSettings = { 
+            apiKey: '', 
+            model: 'google/gemini-2.0-flash-lite-preview-02-05:free', 
+            backendUrl: 'https://backend-viral.onrender.com', 
+            supabaseUrl: '', 
+            supabaseKey: '' 
+        };
+        
+        let savedSettings = store.get('settings', defaultSettings);
+        if (!savedSettings || typeof savedSettings !== 'object') savedSettings = defaultSettings;
+        
+        // Auto-correção forçada para o modelo descontinuado
+        if (!savedSettings.model || savedSettings.model.includes('gemini-2.0-flash-exp')) {
+            savedSettings.model = 'google/gemini-2.0-flash-lite-preview-02-05:free';
+            store.set('settings', savedSettings);
+        }
+
+        // Função para garantir que listas não corrompam e travem a interface
+        function safeArray(val) { return Array.isArray(val) ? val : []; }
+
         const state = {
-            settings: store.get('settings', { apiKey: '', model: 'google/gemini-2.0-flash-lite-preview-02-05:free', backendUrl: 'https://backend-viral.onrender.com', supabaseUrl: '', supabaseKey: '' }),
+            settings: savedSettings,
             session: null,
             plan: 'free',
-            authSkipped: store.get('authSkipped', false),
-            clips: store.get('clips', []),
-            memes: store.get('memes', []),
-            schedule: store.get('schedule', []),
-            activity: store.get('activity', []),
-            briefingCount: store.get('briefingCount', 0),
+            authSkipped: !!store.get('authSkipped', false),
+            clips: safeArray(store.get('clips', [])),
+            memes: safeArray(store.get('memes', [])),
+            schedule: safeArray(store.get('schedule', [])),
+            activity: safeArray(store.get('activity', [])),
+            briefingCount: Number(store.get('briefingCount', 0)) || 0,
             teamSuggestion: store.get('teamSuggestion', null),
             video: null,          // { file, url, duration, width, height }
             segments: [],         // { id, start, end, label, score, reason }
@@ -763,12 +791,6 @@
             calYear: (new Date()).getFullYear(),
             serverFileId: null
         };
-
-        // Backfill do backend de render para sessões que já tinham configurações salvas sem essa URL.
-        if (!state.settings.backendUrl) {
-            state.settings.backendUrl = 'https://backend-viral.onrender.com';
-            store.set('settings', state.settings);
-        }
 
         function saveClips() { store.set('clips', state.clips); }
         function saveMemes() {
@@ -881,7 +903,7 @@
         function refreshEngineStatus() {
             const ok = !!state.settings.apiKey;
             $('engineDot').className = 'status-dot' + (ok ? ' online' : '');
-            $('engineLabel').textContent = ok ? ('Engine: OpenRouter · ' + state.settings.model.split('/').pop()) : 'Engine não configurada';
+            $('engineLabel').textContent = ok ? ('Engine: OpenRouter · ' + (state.settings.model || '').split('/').pop()) : 'Engine não configurada';
         }
 
         // ================= OPENROUTER =================
@@ -1034,9 +1056,9 @@
 
         // ================= SETTINGS =================
         function openSettings() {
-            $('apiKeyInput').value = state.settings.apiKey;
-            $('modelInput').value = state.settings.model;
-            $('backendInput').value = state.settings.backendUrl;
+            $('apiKeyInput').value = state.settings.apiKey || '';
+            $('modelInput').value = state.settings.model || 'google/gemini-2.0-flash-lite-preview-02-05:free';
+            $('backendInput').value = state.settings.backendUrl || 'https://backend-viral.onrender.com';
             $('supabaseUrlInput').value = state.settings.supabaseUrl || '';
             $('supabaseKeyInput').value = state.settings.supabaseKey || '';
             $('settingsModal').classList.remove('hidden');
@@ -1678,4 +1700,478 @@
                     },
                     { role: 'user', content: 'O que aparece na imagem: ' + context }
                 ], { json: true });
-                const parsed = JSON.parse(raw.replace(/^```(json)?|
+                const parsed = JSON.parse(raw.replace(/^```(json)?|```$/g, '').trim());
+                const memes = (parsed.memes || []).filter(m => (m.top || m.bottom)).slice(0, 4);
+                if (!memes.length) throw new Error('vazio');
+                $('memeSuggestions').classList.remove('hidden');
+                $('memeSuggestionList').innerHTML = memes.map((m, i) => `
+                    <button class="w-full text-left glass-card p-3 hover:border-emerald-500/50 transition-colors" data-meme-idx="${i}">
+                        ${m.top ? `<p class="text-xs text-zinc-200 font-semibold uppercase">${escapeHtml(m.top)}</p>` : ''}
+                        ${m.bottom ? `<p class="text-xs text-zinc-400 uppercase">${escapeHtml(m.bottom)}</p>` : ''}
+                    </button>`).join('');
+                $('memeSuggestionList').querySelectorAll('[data-meme-idx]').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const m = memes[Number(el.dataset.memeIdx)];
+                        $('memeTopText').value = m.top || '';
+                        $('memeBottomText').value = m.bottom || '';
+                        drawMeme();
+                    });
+                });
+            } catch (err) {
+                toast(err.message === 'vazio' ? 'A IA não retornou sugestões. Tente reformular a descrição.' : err.message, 'ph-warning');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ph ph-sparkle mr-1" aria-hidden="true"></i>Sugerir legendas';
+            }
+        });
+
+        $('btnMemeDownload').addEventListener('click', () => {
+            if (!memeState.img) return;
+            drawMeme();
+            const link = document.createElement('a');
+            link.download = 'meme-viralize-' + Date.now() + '.png';
+            link.href = memeCanvas.toDataURL('image/png');
+            link.click();
+            logActivity('Meme exportado: ' + memeState.fileName);
+        });
+
+        $('btnMemeSave').addEventListener('click', () => {
+            if (!memeState.img) return;
+            drawMeme();
+            state.memes.push({
+                id: 'meme-' + Date.now(),
+                top: $('memeTopText').value.trim(),
+                bottom: $('memeBottomText').value.trim(),
+                source: memeState.fileName,
+                thumb: memeCanvas.toDataURL('image/jpeg', 0.7),
+                createdAt: Date.now()
+            });
+            if (!saveMemes()) { state.memes.pop(); return; }
+            updateSidebarCounts();
+            logActivity('Meme salvo na biblioteca');
+            toast('Meme salvo na biblioteca.', 'ph-check-circle');
+        });
+
+        // ================= LIBRARY =================
+        function updateSidebarCounts() {
+            const total = state.clips.length + state.memes.length;
+            $('libraryCount').textContent = total ? total : '';
+        }
+
+        function renderLibrary() {
+            const filter = $('libraryFilter').value;
+            const clips = filter === 'meme' ? [] : state.clips.filter(c => filter === 'all' || c.status === filter);
+            const memes = (filter === 'all' || filter === 'meme') ? state.memes : [];
+            const empty = $('libraryEmpty'), grid = $('libraryGrid');
+            if (!clips.length && !memes.length) {
+                empty.classList.remove('hidden');
+                grid.classList.add('hidden');
+                empty.querySelector('p').textContent = (state.clips.length + state.memes.length) ? 'Nada nesse filtro.' : 'Sua biblioteca está vazia.';
+                return;
+            }
+            empty.classList.add('hidden');
+            grid.classList.remove('hidden');
+            const memeCards = memes.map(m => `
+                <div class="glass-card overflow-hidden">
+                    <div class="aspect-video bg-zinc-900 flex items-center justify-center">
+                        <img src="${m.thumb}" alt="" class="w-full h-full object-contain">
+                    </div>
+                    <div class="p-3">
+                        <p class="text-sm font-medium text-white truncate mb-1">${escapeHtml(m.top || m.bottom || 'Meme')}</p>
+                        <p class="text-[11px] text-zinc-500 truncate mb-1">${escapeHtml(m.source)}</p>
+                        <p class="text-[11px] text-zinc-500 mb-3">Meme</p>
+                        <div class="flex gap-2">
+                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-meme-action="download" data-id="${m.id}">Baixar</button>
+                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-meme-action="delete" data-id="${m.id}">Excluir</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+            grid.innerHTML = memeCards + clips.map(c => `
+                <div class="glass-card overflow-hidden">
+                    <div class="aspect-video bg-zinc-900 flex items-center justify-center">
+                        ${c.thumb ? `<img src="${c.thumb}" alt="" class="w-full h-full object-cover">` : `<i class="ph ph-film-strip text-2xl text-zinc-700" aria-hidden="true"></i>`}
+                    </div>
+                    <div class="p-3">
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <p class="text-sm font-medium text-white truncate">${escapeHtml(c.title)}</p>
+                            ${c.score != null ? `<span class="text-xs font-semibold ${c.score >= 75 ? 'text-emerald-500' : 'text-zinc-400'} shrink-0">${c.score}</span>` : ''}
+                        </div>
+                        <p class="text-[11px] text-zinc-500 truncate mb-1">${escapeHtml(c.source)} · ${fmtTime(c.start)}–${fmtTime(c.end)}</p>
+                        <p class="text-[11px] ${c.status === 'scheduled' ? 'text-emerald-500' : 'text-zinc-500'} mb-1">${c.status === 'scheduled' ? 'Agendado' : 'Rascunho'}</p>
+                        <p class="text-[11px] ${c.renderedUrl ? 'text-emerald-500' : 'text-zinc-600'} mb-3">${c.renderedUrl ? '✓ Editado com legenda e trilha' : 'Sem edição aplicada'}</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-lib-action="schedule" data-id="${c.id}">Planejar</button>
+                            ${c.renderedUrl ? `<a href="${c.renderedUrl}" target="_blank" rel="noopener" class="btn-secondary !py-1 !px-2 !text-[11px]">Baixar</a>` : ''}
+                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-lib-action="delete" data-id="${c.id}">Excluir</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+
+            grid.querySelectorAll('button[data-lib-action]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const { libAction, id } = btn.dataset;
+                    if (libAction === 'delete') {
+                        state.clips = state.clips.filter(c => c.id !== id);
+                        state.schedule = state.schedule.filter(s => s.clipId !== id);
+                        saveClips(); saveSchedule();
+                        updateSidebarCounts();
+                        renderLibrary();
+                        toast('Clip removido.', 'ph-trash');
+                    }
+                    if (libAction === 'schedule') openScheduleModal(new Date(), id);
+                });
+            });
+
+            grid.querySelectorAll('button[data-meme-action]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const { memeAction, id } = btn.dataset;
+                    const meme = state.memes.find(m => m.id === id);
+                    if (!meme) return;
+                    if (memeAction === 'delete') {
+                        state.memes = state.memes.filter(m => m.id !== id);
+                        saveMemes();
+                        updateSidebarCounts();
+                        renderLibrary();
+                        toast('Meme removido.', 'ph-trash');
+                    }
+                    if (memeAction === 'download') {
+                        const link = document.createElement('a');
+                        link.download = 'meme-viralize-' + id + '.jpg';
+                        link.href = meme.thumb;
+                        link.click();
+                    }
+                });
+            });
+        }
+        $('libraryFilter').addEventListener('change', renderLibrary);
+
+        // ================= CALENDAR =================
+        const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+        function renderCalendar() {
+            $('calTitle').textContent = MONTHS[state.calMonth] + ' ' + state.calYear;
+            const first = new Date(state.calYear, state.calMonth, 1);
+            const daysInMonth = new Date(state.calYear, state.calMonth + 1, 0).getDate();
+            const startDow = first.getDay();
+            const today = new Date();
+            const cells = [];
+            for (let i = 0; i < startDow; i++) cells.push('<div class="bg-[#0c0c0e] min-h-[88px]"></div>');
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateKey = `${state.calYear}-${String(state.calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const isToday = today.getFullYear() === state.calYear && today.getMonth() === state.calMonth && today.getDate() === d;
+                const posts = state.schedule.filter(s => s.date === dateKey);
+                cells.push(`
+                    <div class="bg-[#0c0c0e] min-h-[88px] p-1.5 hover:bg-[#101014] cursor-pointer transition-colors" data-date="${dateKey}" role="button" tabindex="0" aria-label="Planejar para ${d} de ${MONTHS[state.calMonth]}">
+                        <p class="text-[11px] ${isToday ? 'text-emerald-500 font-semibold' : 'text-zinc-500'} mb-1">${d}</p>
+                        ${posts.map(p => `<div class="text-[10px] text-zinc-300 bg-[#18181b] border border-[#27272a] rounded px-1.5 py-0.5 mb-1 truncate" title="${escapeHtml(p.clipTitle)} · ${p.platform} ${p.time}">${p.time} · ${escapeHtml(p.platform)}</div>`).join('')}
+                    </div>`);
+            }
+            $('calGrid').innerHTML = cells.join('');
+            $('calGrid').querySelectorAll('[data-date]').forEach(cell => {
+                const open = () => {
+                    if (!state.clips.length) {
+                        toast('Salve um clip na biblioteca antes de planejar publicações.', 'ph-info');
+                        return;
+                    }
+                    openScheduleModal(new Date(cell.dataset.date + 'T12:00:00'));
+                };
+                cell.addEventListener('click', open);
+                cell.addEventListener('keydown', (e) => { if (e.key === 'Enter') open(); });
+            });
+        }
+        $('calPrev').addEventListener('click', () => {
+            state.calMonth--;
+            if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
+            renderCalendar();
+        });
+        $('calNext').addEventListener('click', () => {
+            state.calMonth++;
+            if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+            renderCalendar();
+        });
+
+        let scheduleDate = null;
+        function openScheduleModal(date, preselectClipId = null) {
+            if (!state.clips.length) {
+                toast('Salve um clip na biblioteca antes de planejar publicações.', 'ph-info');
+                return;
+            }
+            scheduleDate = date;
+            $('scheduleSubtitle').textContent = 'Para ' + date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) + '.';
+            $('scheduleClip').innerHTML = state.clips.map(c =>
+                `<option value="${c.id}" ${c.id === preselectClipId ? 'selected' : ''}>${escapeHtml(c.title)} (${fmtTime(c.start)}–${fmtTime(c.end)})</option>`).join('');
+            $('scheduleModal').classList.remove('hidden');
+            $('scheduleModal').classList.add('flex');
+        }
+        function closeScheduleModal() {
+            $('scheduleModal').classList.add('hidden');
+            $('scheduleModal').classList.remove('flex');
+        }
+        $('closeSchedule').addEventListener('click', closeScheduleModal);
+        $('saveSchedule').addEventListener('click', () => {
+            const clipId = $('scheduleClip').value;
+            const clip = state.clips.find(c => c.id === clipId);
+            if (!clip || !scheduleDate) return;
+            const dateKey = `${scheduleDate.getFullYear()}-${String(scheduleDate.getMonth() + 1).padStart(2, '0')}-${String(scheduleDate.getDate()).padStart(2, '0')}`;
+            state.schedule.push({
+                id: 'post-' + Date.now(),
+                clipId, clipTitle: clip.title,
+                platform: $('schedulePlatform').value,
+                time: $('scheduleTime').value,
+                date: dateKey
+            });
+            clip.status = 'scheduled';
+            saveClips(); saveSchedule();
+            logActivity('Publicação planejada: ' + clip.title + ' → ' + $('schedulePlatform').value);
+            closeScheduleModal();
+            renderCalendar();
+            toast('Publicação adicionada ao calendário.', 'ph-calendar-check');
+        });
+
+        // ================= ANALYTICS =================
+        function renderAnalytics() {
+            $('anClips').textContent = state.clips.length;
+            const scores = state.clips.filter(c => c.score != null).map(c => c.score);
+            $('anScore').textContent = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : '—';
+            const durations = state.clips.map(c => c.end - c.start);
+            $('anDuration').textContent = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) + 's' : '—';
+
+            let insight;
+            if (!state.clips.length) {
+                insight = 'Ainda não há dados do seu trabalho. Analise um briefing na Sala de Guerra e salve os primeiros cortes no Video Lab — as leituras da equipe aparecem aqui conforme você produz.';
+            } else {
+                const best = [...state.clips].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
+                const scheduled = state.schedule.length;
+                insight = `Você já tem ${state.clips.length} ${state.clips.length === 1 ? 'clip' : 'clips'} na biblioteca.` +
+                    (best?.score != null ? ` O de maior potencial é "${best.title}" (score ${best.score}).` : '') +
+                    (scheduled ? ` ${scheduled} ${scheduled === 1 ? 'publicação planejada' : 'publicações planejadas'} no calendário.` : ' Nenhuma publicação planejada ainda — abra o Calendário para organizar a distribuição.');
+            }
+            $('anInsight').textContent = insight;
+        }
+
+        // ================= HOME =================
+        function renderHome() {
+            const h = new Date().getHours();
+            const greet = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+            $('homeGreeting').textContent = greet + ', Creator';
+            $('statBriefings').textContent = state.briefingCount;
+            $('statClips').textContent = state.clips.length;
+            $('statScheduled').textContent = state.schedule.length;
+
+            let next;
+            if (!state.settings.apiKey) {
+                next = '<button class="btn-primary" id="homeCtaSettings">Configurar a engine de IA</button><p class="text-xs text-zinc-500 mt-2">Adicione sua chave da OpenRouter para ativar a equipe.</p>';
+            } else if (!state.briefingCount) {
+                next = '<button class="btn-primary" data-goto="war-room">Enviar o primeiro briefing</button><p class="text-xs text-zinc-500 mt-2">Conte para a equipe o que você gravou.</p>';
+            } else if (!state.clips.length) {
+                next = '<button class="btn-primary" data-goto="video-lab">Marcar cortes no Video Lab</button><p class="text-xs text-zinc-500 mt-2">Importe o vídeo e salve os melhores momentos.</p>';
+            } else if (!state.schedule.length) {
+                next = '<button class="btn-primary" data-goto="calendar">Planejar as publicações</button><p class="text-xs text-zinc-500 mt-2">Organize quando cada clip vai ao ar.</p>';
+            } else {
+                next = '<p class="text-sm text-zinc-300">Fluxo em andamento. Continue enviando briefings ou revise o calendário.</p>';
+            }
+            $('homeNextStep').innerHTML = next;
+            $('homeNextStep').querySelectorAll('[data-goto]').forEach(btn =>
+                btn.addEventListener('click', () => showView(btn.dataset.goto)));
+            $('homeNextStep').querySelector('#homeCtaSettings')?.addEventListener('click', openSettings);
+
+            const act = $('homeActivity');
+            if (!state.activity.length) {
+                act.innerHTML = '<p class="text-sm text-zinc-600 py-4">Nenhuma atividade ainda.</p>';
+            } else {
+                act.innerHTML = state.activity.map(a => `
+                    <div class="py-3 flex items-center gap-3">
+                        <span class="text-sm text-zinc-300 flex-1 min-w-0 truncate">${escapeHtml(a.text)}</span>
+                        <span class="text-[11px] text-zinc-600 shrink-0">${new Date(a.at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} ${new Date(a.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>`).join('');
+            }
+        }
+
+        // ================= AUTH (Supabase) =================
+        let sb = null;
+        let authMode = 'signin'; // signin | signup
+
+        function showAuthOverlay(show) {
+            $('authOverlay').classList.toggle('hidden', !show);
+            $('authOverlay').classList.toggle('flex', show);
+        }
+
+        function authFeedback(error, info) {
+            $('authError').textContent = error || '';
+            $('authError').classList.toggle('hidden', !error);
+            $('authInfo').textContent = info || '';
+            $('authInfo').classList.toggle('hidden', !info);
+        }
+
+        function renderSidebarUser() {
+            const email = state.session?.user?.email;
+            $('userName').textContent = email ? email.split('@')[0] : 'Creator';
+            $('userSub').textContent = email ? email : 'Sessão local';
+            $('btnLogout').classList.toggle('hidden', !email);
+            const planLabel = { free: '', creator: 'Creator', pro: 'Pro' }[state.plan] || '';
+            $('planBadge').textContent = planLabel;
+        }
+
+        async function loadProfilePlan() {
+            state.plan = 'free';
+            if (sb && state.session) {
+                try {
+                    const { data } = await sb.from('profiles').select('plan').eq('id', state.session.user.id).maybeSingle();
+                    if (data?.plan) state.plan = data.plan;
+                } catch { /* tabela ainda não criada — mantém free */ }
+            }
+            renderSidebarUser();
+        }
+
+        function initAuth() {
+            const { supabaseUrl, supabaseKey } = state.settings;
+            if (!supabaseUrl || !supabaseKey || !window.supabase) {
+                sb = null; state.session = null; state.plan = 'free';
+                showAuthOverlay(false);
+                renderSidebarUser();
+                return;
+            }
+            try {
+                sb = window.supabase.createClient(supabaseUrl, supabaseKey);
+            } catch {
+                toast('URL ou chave do Supabase inválida.', 'ph-warning');
+                return;
+            }
+            sb.auth.getSession().then(({ data: { session } }) => {
+                state.session = session;
+                if (!session && !state.authSkipped) showAuthOverlay(true);
+                else showAuthOverlay(false);
+                loadProfilePlan();
+            });
+            sb.auth.onAuthStateChange((_event, session) => {
+                state.session = session;
+                if (session) {
+                    showAuthOverlay(false);
+                    toast('Sessão iniciada.', 'ph-check-circle');
+                }
+                loadProfilePlan();
+            });
+        }
+
+        $('authToggleMode').addEventListener('click', () => {
+            authMode = authMode === 'signin' ? 'signup' : 'signin';
+            $('authTitle').textContent = authMode === 'signin' ? 'Entrar' : 'Criar conta';
+            $('authSubtitle').textContent = authMode === 'signin'
+                ? 'Use seu e-mail e senha para acessar o workspace.'
+                : 'Crie sua conta para salvar seu trabalho na nuvem.';
+            $('authSubmit').textContent = authMode === 'signin' ? 'Entrar' : 'Criar conta';
+            $('authToggleMode').textContent = authMode === 'signin' ? 'Criar conta' : 'Já tenho conta';
+            authFeedback('', '');
+        });
+
+        $('authSubmit').addEventListener('click', async () => {
+            if (!sb) return;
+            const email = $('authEmail').value.trim();
+            const password = $('authPassword').value;
+            if (!email || !password) { authFeedback('Preencha e-mail e senha.'); return; }
+            $('authSubmit').disabled = true;
+            try {
+                if (authMode === 'signin') {
+                    const { error } = await sb.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                } else {
+                    const { data, error } = await sb.auth.signUp({ email, password });
+                    if (error) throw error;
+                    if (!data.session) authFeedback('', 'Conta criada. Confirme pelo link enviado ao seu e-mail para entrar.');
+                }
+            } catch (error) {
+                const msg = /invalid login/i.test(error.message) ? 'E-mail ou senha incorretos.'
+                    : /already registered/i.test(error.message) ? 'Esse e-mail já tem conta. Use "Entrar".'
+                    : /at least 6/i.test(error.message) ? 'A senha precisa de pelo menos 6 caracteres.'
+                    : error.message;
+                authFeedback(msg);
+            } finally {
+                $('authSubmit').disabled = false;
+            }
+        });
+
+        $('authForgot').addEventListener('click', async () => {
+            if (!sb) return;
+            const email = $('authEmail').value.trim();
+            if (!email) { authFeedback('Digite seu e-mail acima para receber o link de recuperação.'); return; }
+            const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+            if (error) authFeedback(error.message);
+            else authFeedback('', 'Enviamos um link de recuperação para ' + email + '.');
+        });
+
+        $('authSkip').addEventListener('click', () => {
+            state.authSkipped = true;
+            store.set('authSkipped', true);
+            showAuthOverlay(false);
+            toast('Modo local: seu trabalho fica salvo apenas neste navegador.', 'ph-info');
+        });
+
+        $('btnLogout').addEventListener('click', async () => {
+            if (!sb) return;
+            await sb.auth.signOut();
+            state.session = null; state.plan = 'free';
+            state.authSkipped = false;
+            store.set('authSkipped', false);
+            renderSidebarUser();
+            showAuthOverlay(true);
+        });
+
+        // ================= PLAN / BILLING (Mercado Pago via backend) =================
+        const PLAN_NAMES = { free: 'Free', creator: 'Creator', pro: 'Pro' };
+
+        function renderPlan() {
+            $('planCurrent').textContent = PLAN_NAMES[state.plan] || 'Free';
+            document.querySelectorAll('button[data-plan]').forEach(btn => {
+                const isCurrent = btn.dataset.plan === state.plan;
+                btn.disabled = isCurrent;
+                btn.textContent = isCurrent ? 'Plano atual' : 'Assinar ' + PLAN_NAMES[btn.dataset.plan];
+            });
+        }
+
+        document.querySelectorAll('button[data-plan]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const plan = btn.dataset.plan;
+                if (!state.settings.backendUrl) {
+                    openSettings();
+                    toast('Configure a URL do backend para ativar a assinatura.', 'ph-info');
+                    return;
+                }
+                if (sb && !state.session) {
+                    showAuthOverlay(true);
+                    toast('Entre na sua conta antes de assinar.', 'ph-info');
+                    return;
+                }
+                btn.disabled = true;
+                const original = btn.textContent;
+                btn.textContent = 'Abrindo checkout...';
+                try {
+                    const res = await fetch(state.settings.backendUrl + '/billing/checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ plan, email: state.session?.user?.email || '', user_id: state.session?.user?.id || '' })
+                    });
+                    if (!res.ok) throw new Error('O backend respondeu com erro ' + res.status + '. Verifique se o endpoint /billing/checkout está publicado.');
+                    const data = await res.json();
+                    if (!data.init_point) throw new Error('O backend não retornou o link de pagamento (init_point).');
+                    window.open(data.init_point, '_blank');
+                    toast('Checkout do Mercado Pago aberto em nova aba.', 'ph-check-circle');
+                } catch (error) {
+                    toast(error.message, 'ph-warning');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = original;
+                    renderPlan();
+                }
+            });
+        });
+
+        // ================= INIT =================
+        renderAgentList();
+        refreshEngineStatus();
+        updateSidebarCounts();
+        checkBackend();
+        renderSidebarUser();
+        initAuth();
+    </script>
+</body>
+</html>
