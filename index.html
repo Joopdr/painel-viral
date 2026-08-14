@@ -1,4 +1,4 @@
-DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -9,7 +9,7 @@ DOCTYPE html>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
- 
+
         :root {
             --bg-base: #09090b;
             --surface-0: #09090b;
@@ -22,7 +22,7 @@ DOCTYPE html>
             --text-muted: #a1a1aa;
             --accent: #10b981;
         }
- 
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-base);
@@ -30,31 +30,31 @@ DOCTYPE html>
             margin: 0;
             overflow: hidden;
         }
- 
+
         .glass-panel {
             background: var(--glass-soft);
             border: 1px solid var(--border-subtle);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
- 
+
         .glass-card {
             background: var(--glass-premium);
             border: 1px solid var(--border-subtle);
             border-radius: 12px;
         }
- 
+
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
- 
+
         @keyframes fadeInLog {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .log-entry { animation: fadeInLog 0.4s ease-out forwards; }
- 
+
         .status-dot {
             height: 8px; width: 8px; border-radius: 50%;
             display: inline-block; background-color: #3f3f46;
@@ -65,10 +65,10 @@ DOCTYPE html>
         .status-dot.done { background-color: var(--accent); }
         .status-dot.error { background-color: #ef4444; }
         .status-dot.online { background-color: var(--accent); }
- 
+
         .view-section { display: none; height: 100%; flex-direction: column; min-height: 0; }
         .view-section.active { display: flex; animation: fadeInLog 0.25s ease-out forwards; }
- 
+
         .nav-link {
             display: flex; align-items: center; gap: 0.75rem;
             padding: 0.5rem; border-radius: 0.5rem;
@@ -83,9 +83,9 @@ DOCTYPE html>
             border-color: var(--border-subtle);
         }
         .nav-link.active .nav-icon { color: var(--accent); }
- 
+
         :focus-visible { outline: 2px solid rgba(16,185,129,.6); outline-offset: 2px; border-radius: 4px; }
- 
+
         .timeline-track {
             position: relative; height: 56px;
             background: var(--surface-2);
@@ -105,7 +105,7 @@ DOCTYPE html>
             position: absolute; top: 0; bottom: 0; width: 1.5px;
             background: #f4f4f5; pointer-events: none;
         }
- 
+
         .btn-primary {
             background: var(--accent); color: #09090b; font-weight: 600;
             border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem;
@@ -121,14 +121,14 @@ DOCTYPE html>
         }
         .btn-secondary:hover { background: #27272a; }
         .btn-secondary:disabled { opacity: .45; cursor: not-allowed; }
- 
+
         .agent-avatar {
             width: 24px; height: 24px; border-radius: 6px;
             background: var(--surface-2); border: 1px solid var(--border-subtle);
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0; margin-top: 4px;
         }
- 
+
         #toastArea { position: fixed; bottom: 24px; right: 24px; z-index: 100; display: flex; flex-direction: column; gap: 8px; }
         .toast {
             background: var(--surface-2); border: 1px solid #3f3f46;
@@ -139,14 +139,14 @@ DOCTYPE html>
             animation: fadeInLog .25s ease-out;
             max-width: 360px;
         }
- 
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
     </style>
 </head>
 <body class="h-screen w-screen flex">
- 
+
     <!-- SIDEBAR -->
     <aside class="w-64 glass-panel border-r border-[#27272a] h-full flex flex-col justify-between p-4 z-10 relative shrink-0">
         <div class="overflow-y-auto">
@@ -159,7 +159,7 @@ DOCTYPE html>
                     <p class="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">Workspace</p>
                 </div>
             </div>
- 
+
             <div class="mb-8">
                 <p class="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-3 px-2">Plataforma</p>
                 <nav class="space-y-1" aria-label="Navegação principal">
@@ -172,20 +172,20 @@ DOCTYPE html>
                     <a href="#" class="nav-link" data-view="analytics"><i class="ph ph-chart-line-up text-lg nav-icon" aria-hidden="true"></i> Analytics</a>
                 </nav>
             </div>
- 
+
             <div class="mb-8">
                 <p class="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-3 px-2">Conta</p>
                 <nav class="space-y-1" aria-label="Conta">
                     <a href="#" class="nav-link" data-view="plan"><i class="ph ph-credit-card text-lg nav-icon" aria-hidden="true"></i> Plano<span class="ml-auto text-[10px] text-emerald-500" id="planBadge"></span></a>
                 </nav>
             </div>
- 
+
             <div>
                 <p class="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-3 px-2">AI Team</p>
                 <div class="space-y-2 px-2" id="agentStatusList"></div>
             </div>
         </div>
- 
+
         <div class="mt-auto pt-4 border-t border-[#27272a]">
             <div class="flex items-center gap-3 px-2">
                 <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
@@ -204,10 +204,10 @@ DOCTYPE html>
             </div>
         </div>
     </aside>
- 
+
     <!-- MAIN CONTENT AREA -->
     <main class="flex-1 relative z-0 min-w-0">
- 
+
         <!-- ================= HOME ================= -->
         <section id="view-home" class="view-section">
             <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
@@ -229,12 +229,12 @@ DOCTYPE html>
                             <p class="text-2xl font-semibold text-white" id="statScheduled">0</p>
                         </div>
                     </div>
- 
+
                     <div class="mb-10">
                         <h3 class="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-4">Próximo passo</h3>
                         <div id="homeNextStep" class="text-sm text-zinc-300"></div>
                     </div>
- 
+
                     <div>
                         <h3 class="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-4">Atividade recente</h3>
                         <div id="homeActivity" class="divide-y divide-[#1f1f23] border-t border-b border-[#1f1f23]"></div>
@@ -242,7 +242,7 @@ DOCTYPE html>
                 </div>
             </div>
         </section>
- 
+
         <!-- ================= WAR ROOM ================= -->
         <section id="view-war-room" class="view-section active">
             <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
@@ -254,7 +254,7 @@ DOCTYPE html>
                     </div>
                 </div>
             </header>
- 
+
             <div id="chatFeed" class="flex-1 overflow-y-auto p-6 space-y-5">
                 <div class="log-entry">
                     <div class="flex items-start gap-3">
@@ -271,7 +271,7 @@ DOCTYPE html>
                     </div>
                 </div>
             </div>
- 
+
             <div class="p-6 glass-panel border-t border-[#27272a] z-10 shrink-0">
                 <div class="max-w-4xl mx-auto relative flex items-end gap-3">
                     <textarea id="userInput" rows="1" class="w-full bg-[#18181b] border border-[#27272a] rounded-xl py-3 px-4 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 resize-none transition-colors" placeholder="Envie seu briefing. Ex.: fiz um clutch 1v4 de Valorant, reação ao vivo, chat explodiu..." aria-label="Briefing"></textarea>
@@ -284,7 +284,7 @@ DOCTYPE html>
                 </div>
             </div>
         </section>
- 
+
         <!-- ================= VIDEO LAB ================= -->
         <section id="view-video-lab" class="view-section">
             <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
@@ -296,7 +296,7 @@ DOCTYPE html>
                     </div>
                 </div>
             </header>
- 
+
             <div class="flex-1 overflow-y-auto p-6">
                 <!-- Upload / empty state -->
                 <div id="labEmptyState" class="h-full flex flex-col items-center justify-center">
@@ -310,7 +310,7 @@ DOCTYPE html>
                         <button class="btn-secondary" id="btnBrowseVideo">Selecionar arquivo</button>
                     </div>
                 </div>
- 
+
                 <!-- Workstation -->
                 <div id="labWorkstation" class="hidden max-w-5xl mx-auto">
                     <div class="flex items-center justify-between mb-4">
@@ -323,11 +323,11 @@ DOCTYPE html>
                             <button class="btn-secondary" id="btnNewVideo">Trocar vídeo</button>
                         </div>
                     </div>
- 
+
                     <div class="rounded-xl overflow-hidden border border-[#27272a] bg-black mb-4">
                         <video id="labVideo" class="w-full max-h-[420px]" controls playsinline></video>
                     </div>
- 
+
                     <!-- Upload progress -->
                     <div id="uploadStatusPanel" class="glass-card p-4 mb-4 hidden">
                         <div class="flex items-center justify-between mb-2">
@@ -338,7 +338,7 @@ DOCTYPE html>
                             <div class="bg-emerald-500 h-1.5 rounded-full transition-all duration-300" id="uploadProgressBar" style="width: 0%"></div>
                         </div>
                     </div>
- 
+
                     <!-- Timeline -->
                     <div class="mb-2 flex items-center justify-between">
                         <p class="text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">Timeline</p>
@@ -347,7 +347,7 @@ DOCTYPE html>
                     <div class="timeline-track mb-4" id="timelineTrack" aria-label="Timeline do vídeo">
                         <div class="timeline-playhead" id="timelinePlayhead" style="left:0%"></div>
                     </div>
- 
+
                     <!-- Controls -->
                     <div class="flex flex-wrap items-center gap-2 mb-6">
                         <button class="btn-primary" id="btnFindMoments"><i class="ph ph-magnifying-glass mr-1" aria-hidden="true"></i>Encontrar momentos</button>
@@ -356,14 +356,14 @@ DOCTYPE html>
                         <button class="btn-secondary" id="btnAddSegment" disabled>Adicionar corte manual</button>
                         <span class="text-xs text-zinc-500 ml-2" id="markInfo"></span>
                     </div>
- 
+
                     <!-- Context for AI -->
                     <div class="mb-6">
                         <label for="labContext" class="block text-[11px] text-zinc-500 uppercase tracking-wider font-semibold mb-2">Contexto para a análise</label>
                         <textarea id="labContext" rows="2" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 resize-none" placeholder="O que acontece nesse vídeo? Ex.: gameplay de Valorant, clutch aos 12 min, reação forte no final..."></textarea>
                         <p class="text-[10px] text-zinc-600 mt-1">A análise usa a duração do vídeo e a sua descrição. Transcrição automática de áudio depende do backend e ainda não está ativa.</p>
                     </div>
- 
+
                     <!-- Segments -->
                     <div>
                         <p class="text-[11px] text-zinc-500 uppercase tracking-wider font-semibold mb-3">Cortes sugeridos</p>
@@ -374,7 +374,7 @@ DOCTYPE html>
                 </div>
             </div>
         </section>
- 
+
         <!-- ================= MEME LAB ================= -->
         <section id="view-meme-lab" class="view-section">
             <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
@@ -394,7 +394,7 @@ DOCTYPE html>
                         <button class="btn-secondary" id="btnBrowseMeme">Selecionar imagem</button>
                     </div>
                 </div>
- 
+
                 <!-- Workstation -->
                 <div id="memeWorkstation" class="hidden max-w-5xl mx-auto">
                     <div class="flex items-center justify-between mb-4">
@@ -404,7 +404,7 @@ DOCTYPE html>
                         </div>
                         <button class="btn-secondary" id="btnNewMemeImage">Trocar imagem</button>
                     </div>
- 
+
                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
                         <div class="lg:col-span-3">
                             <div class="rounded-xl overflow-hidden border border-[#27272a] bg-black flex items-center justify-center">
@@ -447,7 +447,7 @@ DOCTYPE html>
                 </div>
             </div>
         </section>
- 
+
         <!-- ================= LIBRARY ================= -->
         <section id="view-library" class="view-section">
             <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
@@ -471,7 +471,7 @@ DOCTYPE html>
                 <div id="libraryGrid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-6xl mx-auto"></div>
             </div>
         </section>
- 
+
         <!-- ================= CALENDAR ================= -->
         <section id="view-calendar" class="view-section">
             <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
@@ -492,7 +492,7 @@ DOCTYPE html>
                 </div>
             </div>
         </section>
- 
+
         <!-- ================= ANALYTICS ================= -->
         <section id="view-analytics" class="view-section">
             <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
@@ -514,12 +514,12 @@ DOCTYPE html>
                             <p class="text-2xl font-semibold text-white" id="anDuration">—</p>
                         </div>
                     </div>
- 
+
                     <div class="mb-8" id="anInsightWrap">
                         <h3 class="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-3">Leitura da equipe</h3>
                         <p class="text-sm text-zinc-300 leading-relaxed" id="anInsight"></p>
                     </div>
- 
+
                     <div class="border-t border-[#1f1f23] pt-6">
                         <h3 class="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-3">Desempenho nas plataformas</h3>
                         <p class="text-sm text-zinc-500 mb-4">Views, retenção e receita reais dependem da conexão com as contas. Essas integrações ainda não estão ativas.</p>
@@ -533,7 +533,7 @@ DOCTYPE html>
                 </div>
             </div>
         </section>
- 
+
         <!-- ================= PLAN ================= -->
         <section id="view-plan" class="view-section">
             <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
@@ -543,7 +543,7 @@ DOCTYPE html>
                 <div class="max-w-3xl mx-auto">
                     <p class="text-sm text-zinc-400 mb-1">Seu plano atual: <strong class="text-white" id="planCurrent">Free</strong></p>
                     <p class="text-xs text-zinc-600 mb-8" id="planNote">A cobrança é feita pelo Mercado Pago (PIX ou cartão). O upgrade exige backend configurado e conta conectada.</p>
- 
+
                     <div class="border border-[#27272a] rounded-xl overflow-hidden divide-y divide-[#27272a]">
                         <div class="grid grid-cols-4 text-[11px] text-zinc-500 uppercase tracking-wider bg-[#101012]">
                             <div class="p-4">Recurso</div>
@@ -580,9 +580,9 @@ DOCTYPE html>
                 </div>
             </div>
         </section>
- 
+
     </main>
- 
+
     <!-- Auth Overlay -->
     <div id="authOverlay" class="fixed inset-0 bg-[#09090b] z-40 hidden items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="authTitle">
         <div class="w-[380px] max-w-[calc(100vw-32px)]">
@@ -598,20 +598,20 @@ DOCTYPE html>
             <div class="glass-card bg-[#101012] p-6">
                 <h3 class="text-base font-semibold text-white mb-1" id="authTitle">Entrar</h3>
                 <p class="text-xs text-zinc-500 mb-5" id="authSubtitle">Use seu e-mail e senha para acessar o workspace.</p>
- 
+
                 <label class="block text-xs font-medium text-zinc-300 mb-1" for="authEmail">E-mail</label>
                 <input type="email" id="authEmail" autocomplete="email" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-3" placeholder="voce@exemplo.com">
- 
+
                 <div id="authPasswordWrap">
                     <label class="block text-xs font-medium text-zinc-300 mb-1" for="authPassword">Senha</label>
                     <input type="password" id="authPassword" autocomplete="current-password" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-2" placeholder="••••••••">
                 </div>
- 
+
                 <p class="text-xs text-red-400 mb-2 hidden" id="authError"></p>
                 <p class="text-xs text-emerald-500 mb-2 hidden" id="authInfo"></p>
- 
+
                 <button class="btn-primary w-full mt-2" id="authSubmit">Entrar</button>
- 
+
                 <div class="flex items-center justify-between mt-4 text-xs">
                     <button class="text-zinc-400 hover:text-white" id="authToggleMode">Criar conta</button>
                     <button class="text-zinc-400 hover:text-white" id="authForgot">Esqueci a senha</button>
@@ -622,78 +622,78 @@ DOCTYPE html>
             </p>
         </div>
     </div>
- 
+
     <!-- Settings Modal -->
     <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
         <div class="glass-card w-[440px] max-w-[calc(100vw-32px)] p-6 bg-[#101012]">
             <h3 class="text-lg font-semibold text-white mb-1" id="settingsTitle">Configurações</h3>
             <p class="text-xs text-zinc-400 mb-5">As chaves ficam salvas apenas neste navegador. Em produção, mova as chamadas de IA para o seu backend.</p>
- 
+
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="apiKeyInput">OpenRouter API Key</label>
             <input type="password" id="apiKeyInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-4" placeholder="sk-or-v1-...">
- 
+
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="modelInput">Modelo</label>
-            <input type="text" id="modelInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-4" placeholder="ex.: google/gemini-2.0-flash-exp:free">
- 
+            <input type="text" id="modelInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-4" placeholder="ex.: google/gemini-2.0-flash-lite-preview-02-05:free">
+
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="backendInput">URL do backend (FastAPI / Render)</label>
             <input type="url" id="backendInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-4" placeholder="https://seu-backend.onrender.com">
- 
+
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="supabaseUrlInput">Supabase URL</label>
             <input type="url" id="supabaseUrlInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-4" placeholder="https://xxxx.supabase.co">
- 
+
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="supabaseKeyInput">Supabase anon key (pública)</label>
             <input type="password" id="supabaseKeyInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-6" placeholder="eyJhbGciOi...">
- 
+
             <div class="flex justify-end gap-3">
                 <button id="closeSettings" class="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white transition-colors">Cancelar</button>
                 <button id="saveSettings" class="px-4 py-2 rounded-lg text-sm font-medium bg-white text-zinc-950 hover:bg-zinc-200 transition-colors">Salvar</button>
             </div>
         </div>
     </div>
- 
+
     <!-- Schedule Modal -->
     <div id="scheduleModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="scheduleTitle">
         <div class="glass-card w-[440px] max-w-[calc(100vw-32px)] p-6 bg-[#101012]">
             <h3 class="text-lg font-semibold text-white mb-1" id="scheduleTitle">Planejar publicação</h3>
             <p class="text-xs text-zinc-400 mb-5" id="scheduleSubtitle"></p>
- 
+
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="scheduleClip">Clip</label>
             <select id="scheduleClip" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none mb-4"></select>
- 
+
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="schedulePlatform">Plataforma</label>
             <select id="schedulePlatform" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none mb-4">
                 <option>TikTok</option>
                 <option>YouTube Shorts</option>
                 <option>Instagram Reels</option>
             </select>
- 
+
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="scheduleTime">Horário</label>
             <input type="time" id="scheduleTime" value="18:00" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none mb-6">
- 
+
             <div class="flex justify-end gap-3">
                 <button id="closeSchedule" class="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white transition-colors">Cancelar</button>
                 <button id="saveSchedule" class="btn-primary">Planejar</button>
             </div>
         </div>
     </div>
- 
+
     <!-- Render / Edit Modal -->
     <div id="renderModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="renderTitle">
         <div class="glass-card w-[480px] max-w-[calc(100vw-32px)] p-6 bg-[#101012] max-h-[90vh] overflow-y-auto">
             <h3 class="text-lg font-semibold text-white mb-1" id="renderTitle">Editar &amp; renderizar</h3>
             <p class="text-xs text-zinc-400 mb-5" id="renderSubtitle"></p>
- 
+
             <div id="renderSuggestionBanner" class="hidden text-xs text-emerald-500 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-3 py-2 mb-4 flex items-start gap-2">
                 <i class="ph ph-sparkle mt-0.5" aria-hidden="true"></i>
                 <span>Preenchemos com a sugestão da equipe (Retention Editor + Trend Hunter). Ajuste como quiser.</span>
             </div>
- 
+
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="renderTopText">Legenda de cima (meme)</label>
             <input type="text" id="renderTopText" maxlength="60" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-3" placeholder="Ex.: quando o mata-mata começa">
- 
+
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="renderBottomText">Legenda de baixo (meme)</label>
             <input type="text" id="renderBottomText" maxlength="60" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-3" placeholder="Ex.: e o ping decide subir">
- 
+
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="renderAudioStyle">Trilha sonora</label>
             <select id="renderAudioStyle" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none mb-1">
                 <option value="nenhum">Sem trilha</option>
@@ -704,32 +704,32 @@ DOCTYPE html>
                 <option value="proprio">Meu próprio áudio</option>
             </select>
             <p class="text-[10px] text-zinc-600 mb-3">Não baixamos áudios virais de outras redes sem licença — isso é risco de direitos autorais para o seu canal. Escolha um estilo para o servidor escolher uma trilha licenciada, ou envie o seu próprio áudio abaixo.</p>
- 
+
             <div id="renderOwnAudioWrap" class="hidden mb-3">
                 <label class="block text-xs font-medium text-zinc-300 mb-1" for="renderAudioFile">Arquivo de áudio</label>
                 <input type="file" id="renderAudioFile" accept="audio/*" class="w-full text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#18181b] file:text-zinc-300 file:text-xs">
             </div>
- 
+
             <div id="renderStatusPanel" class="hidden glass-card p-3 mb-3">
                 <p class="text-xs text-zinc-300 flex items-center gap-2" id="renderStatusText"><i class="ph ph-spinner animate-spin" aria-hidden="true"></i> Enviando...</p>
             </div>
- 
+
             <div id="renderResultPanel" class="hidden mb-3">
                 <video id="renderResultVideo" class="w-full rounded-lg border border-[#27272a]" controls></video>
             </div>
- 
+
             <div class="flex justify-end gap-3 mt-2">
                 <button id="closeRender" class="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white transition-colors">Fechar</button>
                 <button id="submitRender" class="btn-primary">Renderizar vídeo</button>
             </div>
         </div>
     </div>
- 
+
     <div id="toastArea" aria-live="polite"></div>
- 
+
     <script>
         'use strict';
- 
+
         // ================= DATA LAYER =================
         const store = {
             get(key, fallback) {
@@ -742,9 +742,9 @@ DOCTYPE html>
                 localStorage.setItem('viralize.' + key, JSON.stringify(value));
             }
         };
- 
+
         const state = {
-            settings: store.get('settings', { apiKey: '', model: 'google/gemini-2.0-flash-exp:free', backendUrl: 'https://backend-viral.onrender.com', supabaseUrl: '', supabaseKey: '' }),
+            settings: store.get('settings', { apiKey: '', model: 'google/gemini-2.0-flash-lite-preview-02-05:free', backendUrl: 'https://backend-viral.onrender.com', supabaseUrl: '', supabaseKey: '' }),
             session: null,
             plan: 'free',
             authSkipped: store.get('authSkipped', false),
@@ -763,42 +763,42 @@ DOCTYPE html>
             calYear: (new Date()).getFullYear(),
             serverFileId: null
         };
- 
+
         // Backfill do backend de render para sessões que já tinham configurações salvas sem essa URL.
         if (!state.settings.backendUrl) {
             state.settings.backendUrl = 'https://backend-viral.onrender.com';
             store.set('settings', state.settings);
         }
- 
+
         function saveClips() { store.set('clips', state.clips); }
         function saveMemes() {
             try { store.set('memes', state.memes); return true; }
             catch { toast('Sem espaço no navegador para salvar mais memes. Exclua alguns na Biblioteca.', 'ph-warning'); return false; }
         }
         function saveSchedule() { store.set('schedule', state.schedule); }
- 
+
         function logActivity(text) {
             state.activity.unshift({ text, at: Date.now() });
             state.activity = state.activity.slice(0, 20);
             store.set('activity', state.activity);
         }
- 
+
         // ================= HELPERS =================
         const $ = (id) => document.getElementById(id);
- 
+
         function fmtTime(sec) {
             if (!isFinite(sec)) return '00:00';
             sec = Math.max(0, sec);
             const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
             return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
         }
- 
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
- 
+
         function toast(message, icon = 'ph-info') {
             const el = document.createElement('div');
             el.className = 'toast';
@@ -806,10 +806,10 @@ DOCTYPE html>
             $('toastArea').appendChild(el);
             setTimeout(() => el.remove(), 4200);
         }
- 
+
         // ================= NAVIGATION =================
         const views = ['home', 'war-room', 'video-lab', 'meme-lab', 'library', 'calendar', 'analytics', 'plan'];
- 
+
         function showView(name) {
             views.forEach(v => {
                 $('view-' + v).classList.toggle('active', v === name);
@@ -823,14 +823,14 @@ DOCTYPE html>
             if (name === 'analytics') renderAnalytics();
             if (name === 'plan') renderPlan();
         }
- 
+
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', (e) => { e.preventDefault(); showView(link.dataset.view); });
         });
         document.querySelectorAll('[data-goto]').forEach(btn => {
             btn.addEventListener('click', () => showView(btn.dataset.goto));
         });
- 
+
         // ================= AI TEAM =================
         const AGENTS = [
             {
@@ -859,7 +859,7 @@ DOCTYPE html>
                 prompt: 'Você é o Analista de Monetização. Com base no plano acima, aponte de forma realista: como esse conteúdo pode gerar receita (fundo de criadores, direcionamento para live, patrocínio, comunidade) e um próximo passo comercial concreto. Não prometa números. Responda em Português do Brasil, sem saudações, em no máximo 100 palavras.'
             }
         ];
- 
+
         function renderAgentList() {
             $('agentStatusList').innerHTML = AGENTS.map(a => `
                 <div class="flex items-center gap-2 text-xs text-zinc-300">
@@ -867,23 +867,23 @@ DOCTYPE html>
                     <span class="ml-auto text-[10px] text-zinc-600" id="dotlabel-${a.id}"></span>
                 </div>`).join('');
         }
- 
+
         function setAgentStatus(id, status, label = '') {
             const dot = $('dot-' + id);
             if (!dot) return;
             dot.className = 'status-dot' + (status ? ' ' + status : '');
             $('dotlabel-' + id).textContent = label;
         }
- 
+
         function resetAgents() { AGENTS.forEach(a => setAgentStatus(a.id, '', '')); }
- 
+
         // ================= ENGINE STATUS =================
         function refreshEngineStatus() {
             const ok = !!state.settings.apiKey;
             $('engineDot').className = 'status-dot' + (ok ? ' online' : '');
             $('engineLabel').textContent = ok ? ('Engine: OpenRouter · ' + state.settings.model.split('/').pop()) : 'Engine não configurada';
         }
- 
+
         // ================= OPENROUTER =================
         async function callOpenRouter(messages, { json = false } = {}) {
             const body = { model: state.settings.model, messages };
@@ -909,11 +909,11 @@ DOCTYPE html>
             if (!content) throw new Error('O modelo não retornou conteúdo. Tente novamente ou troque o modelo.');
             return content;
         }
- 
+
         // ================= WAR ROOM =================
         const chatFeed = $('chatFeed');
         const userInput = $('userInput');
- 
+
         userInput.addEventListener('input', function () {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 150) + 'px';
@@ -922,7 +922,7 @@ DOCTYPE html>
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
         });
         $('sendBtn').addEventListener('click', handleSend);
- 
+
         function appendLog(title, htmlContent, iconClass, iconColor, id = '') {
             const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             chatFeed.insertAdjacentHTML('beforeend', `
@@ -940,14 +940,14 @@ DOCTYPE html>
             </div>`);
             chatFeed.scrollTop = chatFeed.scrollHeight;
         }
- 
+
         function formatResponse(text) {
             let html = escapeHtml(text);
             html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>');
             html = html.replace(/\n/g, '<br>');
             return html;
         }
- 
+
         async function handleSend() {
             const text = userInput.value.trim();
             if (!text || state.pipelineRunning) return;
@@ -956,23 +956,23 @@ DOCTYPE html>
                 toast('Configure sua chave da OpenRouter para ativar a equipe.', 'ph-key');
                 return;
             }
- 
+
             appendLog('Briefing', formatResponse(text), 'ph-user', 'text-zinc-400');
             userInput.value = '';
             userInput.style.height = 'auto';
- 
+
             state.pipelineRunning = true;
             $('sendBtn').disabled = true;
             resetAgents();
- 
+
             const transcript = [{ role: 'user', content: 'Briefing do criador: ' + text }];
             let failed = false;
- 
+
             for (const agent of AGENTS) {
                 setAgentStatus(agent.id, 'working', 'ativo');
                 const loadingId = 'loading-' + agent.id + '-' + Date.now();
                 appendLog(agent.name, `<span class="text-zinc-500 flex items-center gap-2"><i class="ph ph-spinner animate-spin" aria-hidden="true"></i>${escapeHtml(agent.working)}...</span>`, agent.icon, 'text-zinc-500', loadingId);
- 
+
                 try {
                     const output = await callOpenRouter([
                         { role: 'system', content: agent.prompt },
@@ -990,13 +990,13 @@ DOCTYPE html>
                     break;
                 }
             }
- 
+
             if (!failed) {
                 state.briefingCount++;
                 store.set('briefingCount', state.briefingCount);
                 logActivity('Briefing analisado pela equipe: "' + text.slice(0, 60) + (text.length > 60 ? '…' : '') + '"');
                 appendLog('Sistema', 'Plano completo. Quando o vídeo estiver pronto, leve-o ao <strong class="text-white">Video Lab</strong> para marcar os cortes.', 'ph-check-circle', 'text-emerald-500');
- 
+
                 // Traduz a leitura da equipe em uma sugestão pronta para execução no Video Lab
                 // (legenda estilo meme + estilo de trilha), conectando a Sala de Guerra à edição real.
                 try {
@@ -1026,12 +1026,12 @@ DOCTYPE html>
                     // (ex.: limite de requisições), o briefing já foi concluído com sucesso acima.
                 }
             }
- 
+
             state.pipelineRunning = false;
             $('sendBtn').disabled = false;
             setTimeout(resetAgents, 4000);
         }
- 
+
         // ================= SETTINGS =================
         function openSettings() {
             $('apiKeyInput').value = state.settings.apiKey;
@@ -1051,7 +1051,7 @@ DOCTYPE html>
         $('closeSettings').addEventListener('click', closeSettings);
         $('saveSettings').addEventListener('click', () => {
             state.settings.apiKey = $('apiKeyInput').value.trim();
-            state.settings.model = $('modelInput').value.trim() || 'google/gemini-2.0-flash-exp:free';
+            state.settings.model = $('modelInput').value.trim() || 'google/gemini-2.0-flash-lite-preview-02-05:free';
             state.settings.backendUrl = $('backendInput').value.trim().replace(/\/+$/, '');
             const newSbUrl = $('supabaseUrlInput').value.trim().replace(/\/+$/, '');
             const newSbKey = $('supabaseKeyInput').value.trim();
@@ -1068,7 +1068,7 @@ DOCTYPE html>
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') { closeSettings(); closeScheduleModal(); closeRenderModal(); }
         });
- 
+
         // ================= BACKEND (FastAPI/Render) =================
         async function checkBackend() {
             const url = state.settings.backendUrl;
@@ -1090,16 +1090,16 @@ DOCTYPE html>
                 label.textContent = 'Servidor de render: sem resposta (pode estar hibernando)';
             }
         }
- 
+
         // ================= VIDEO LAB =================
         const labVideo = $('labVideo');
         const videoFileInput = $('videoFileInput');
         const uploadZone = $('uploadZone');
- 
+
         $('btnBrowseVideo').addEventListener('click', (e) => { e.stopPropagation(); videoFileInput.click(); });
         uploadZone.addEventListener('click', () => videoFileInput.click());
         uploadZone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); videoFileInput.click(); } });
- 
+
         uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('border-emerald-500'); });
         uploadZone.addEventListener('dragleave', (e) => { e.preventDefault(); uploadZone.classList.remove('border-emerald-500'); });
         uploadZone.addEventListener('drop', (e) => {
@@ -1110,7 +1110,7 @@ DOCTYPE html>
         videoFileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) loadVideo(e.target.files[0]);
         });
- 
+
         function loadVideo(file) {
             if (!file.type.startsWith('video')) {
                 toast('Esse arquivo não parece ser um vídeo. Use .mp4, .mov ou .webm.', 'ph-warning');
@@ -1123,7 +1123,7 @@ DOCTYPE html>
             state.markIn = null; state.markOut = null;
             state.serverFileId = null;
             labVideo.src = url;
- 
+
             labVideo.onloadedmetadata = () => {
                 state.video.duration = labVideo.duration;
                 state.video.width = labVideo.videoWidth;
@@ -1140,14 +1140,14 @@ DOCTYPE html>
                 toast('Não conseguimos abrir esse vídeo. O formato pode não ser suportado pelo navegador.', 'ph-warning');
             };
         }
- 
+
         $('btnNewVideo').addEventListener('click', () => {
             labVideo.pause();
             $('labWorkstation').classList.add('hidden');
             $('labEmptyState').classList.remove('hidden');
             videoFileInput.value = '';
         });
- 
+
         // Timeline
         const timelineTrack = $('timelineTrack');
         labVideo.addEventListener('timeupdate', () => {
@@ -1164,7 +1164,7 @@ DOCTYPE html>
             const rect = timelineTrack.getBoundingClientRect();
             labVideo.currentTime = ((e.clientX - rect.left) / rect.width) * state.video.duration;
         });
- 
+
         // Manual marks
         function updateMarkInfo() {
             const parts = [];
@@ -1186,7 +1186,7 @@ DOCTYPE html>
             updateMarkInfo();
             renderSegments();
         });
- 
+
         // AI moment finding
         $('btnFindMoments').addEventListener('click', async () => {
             if (!state.video) return;
@@ -1213,7 +1213,7 @@ DOCTYPE html>
                     },
                     { role: 'user', content: `Duração total do vídeo: ${dur} segundos. Descrição do criador: ${context}` }
                 ], { json: true });
- 
+
                 const match = raw.match(/\{[\s\S]*\}/);
                 if (!match) throw new Error('A resposta da análise veio em formato inesperado. Tente novamente.');
                 const parsed = JSON.parse(match[0]);
@@ -1240,7 +1240,7 @@ DOCTYPE html>
                 btn.innerHTML = '<i class="ph ph-magnifying-glass mr-1" aria-hidden="true"></i>Encontrar momentos';
             }
         });
- 
+
         function renderSegments() {
             // timeline markers
             timelineTrack.querySelectorAll('.timeline-segment').forEach(el => el.remove());
@@ -1255,7 +1255,7 @@ DOCTYPE html>
                     timelineTrack.appendChild(el);
                 });
             }
- 
+
             // list
             const list = $('segmentsList');
             if (!state.segments.length) {
@@ -1285,7 +1285,7 @@ DOCTYPE html>
                         </div>
                     </div>
                 </div>`).join('');
- 
+
             list.querySelectorAll('button[data-action]').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const { action, id } = btn.dataset;
@@ -1296,7 +1296,7 @@ DOCTYPE html>
                 });
             });
         }
- 
+
         function previewSegment(id) {
             const seg = state.segments.find(s => s.id === id);
             if (!seg) return;
@@ -1304,7 +1304,7 @@ DOCTYPE html>
             state.previewEnd = seg.end;
             labVideo.play();
         }
- 
+
         async function captureThumbnail(time) {
             return new Promise((resolve) => {
                 const onSeeked = () => {
@@ -1322,7 +1322,7 @@ DOCTYPE html>
                 labVideo.currentTime = time;
             });
         }
- 
+
         async function saveSegmentToLibrary(id) {
             const seg = state.segments.find(s => s.id === id);
             if (!seg) return;
@@ -1346,7 +1346,7 @@ DOCTYPE html>
             toast('Clip salvo na biblioteca.', 'ph-check-circle');
             if (wasPlaying) labVideo.play();
         }
- 
+
         // Upload real (XHR com progresso real)
         $('btnUploadToServer').addEventListener('click', () => {
             if (!state.video) return;
@@ -1361,10 +1361,10 @@ DOCTYPE html>
             bar.className = 'bg-emerald-500 h-1.5 rounded-full transition-all duration-300';
             bar.style.width = '0%'; pct.textContent = '0%';
             txt.textContent = 'Enviando ' + state.video.file.name + '...';
- 
+
             const formData = new FormData();
             formData.append('video', state.video.file);
- 
+
             const xhr = new XMLHttpRequest();
             xhr.open('POST', state.settings.backendUrl + '/upload');
             xhr.upload.onprogress = (e) => {
@@ -1393,7 +1393,7 @@ DOCTYPE html>
             };
             xhr.send(formData);
         });
- 
+
         function uploadVideoToServer(onProgress) {
             return new Promise((resolve, reject) => {
                 if (!state.video) { reject(new Error('Nenhum vídeo carregado.')); return; }
@@ -1420,10 +1420,10 @@ DOCTYPE html>
                 xhr.send(formData);
             });
         }
- 
+
         // ================= RENDER / EDIT MODAL =================
         let renderSegId = null;
- 
+
         function openRenderModal(segId) {
             const seg = state.segments.find(s => s.id === segId);
             if (!seg) return;
@@ -1434,7 +1434,7 @@ DOCTYPE html>
             }
             renderSegId = segId;
             $('renderSubtitle').textContent = `${seg.label} · ${fmtTime(seg.start)}–${fmtTime(seg.end)}`;
- 
+
             const sug = state.teamSuggestion;
             const useSuggestion = !!(sug && !seg._suggestionApplied && !seg.renderedUrl);
             $('renderTopText').value = useSuggestion ? sug.topText : (seg.topText || '');
@@ -1443,21 +1443,21 @@ DOCTYPE html>
             $('renderSuggestionBanner').classList.toggle('hidden', !useSuggestion);
             $('renderOwnAudioWrap').classList.toggle('hidden', $('renderAudioStyle').value !== 'proprio');
             $('renderAudioFile').value = '';
- 
+
             $('renderStatusPanel').classList.add('hidden');
             $('renderResultPanel').classList.add('hidden');
             if (seg.renderedUrl) {
                 $('renderResultPanel').classList.remove('hidden');
                 $('renderResultVideo').src = seg.renderedUrl;
             }
- 
+
             $('submitRender').disabled = false;
             $('submitRender').textContent = seg.renderedUrl ? 'Renderizar de novo' : 'Renderizar vídeo';
- 
+
             $('renderModal').classList.remove('hidden');
             $('renderModal').classList.add('flex');
         }
- 
+
         function closeRenderModal() {
             $('renderModal').classList.add('hidden');
             $('renderModal').classList.remove('flex');
@@ -1466,7 +1466,7 @@ DOCTYPE html>
         $('renderAudioStyle').addEventListener('change', () => {
             $('renderOwnAudioWrap').classList.toggle('hidden', $('renderAudioStyle').value !== 'proprio');
         });
- 
+
         async function pollRenderJob(jobId, attempts = 0) {
             if (attempts > 40) throw new Error('O servidor demorou demais para renderizar. Tente novamente em instantes.');
             await new Promise(r => setTimeout(r, 3000));
@@ -1477,11 +1477,11 @@ DOCTYPE html>
             if (data.status === 'error') throw new Error(data.message || 'A renderização falhou no servidor.');
             return pollRenderJob(jobId, attempts + 1);
         }
- 
+
         $('submitRender').addEventListener('click', async () => {
             const seg = state.segments.find(s => s.id === renderSegId);
             if (!seg || !state.video) return;
- 
+
             const topText = $('renderTopText').value.trim();
             const bottomText = $('renderBottomText').value.trim();
             const audioStyle = $('renderAudioStyle').value;
@@ -1490,13 +1490,13 @@ DOCTYPE html>
                 toast('Selecione o arquivo de áudio ou escolha um estilo de trilha.', 'ph-info');
                 return;
             }
- 
+
             const btn = $('submitRender');
             btn.disabled = true;
             $('renderStatusPanel').classList.remove('hidden');
             $('renderResultPanel').classList.add('hidden');
             const statusText = $('renderStatusText');
- 
+
             try {
                 if (!state.serverFileId) {
                     statusText.innerHTML = '<i class="ph ph-spinner animate-spin" aria-hidden="true"></i> Enviando vídeo ao servidor...';
@@ -1504,10 +1504,10 @@ DOCTYPE html>
                         statusText.innerHTML = `<i class="ph ph-spinner animate-spin" aria-hidden="true"></i> Enviando vídeo... ${p}%`;
                     });
                 }
- 
+
                 statusText.innerHTML = '<i class="ph ph-spinner animate-spin" aria-hidden="true"></i> Renderizando corte, legendas e trilha...';
                 btn.textContent = 'Renderizando...';
- 
+
                 const formData = new FormData();
                 formData.append('file_id', state.serverFileId);
                 formData.append('start', seg.start);
@@ -1516,29 +1516,29 @@ DOCTYPE html>
                 formData.append('bottom_text', bottomText);
                 formData.append('audio_style', audioStyle);
                 if (audioFile) formData.append('audio_file', audioFile);
- 
+
                 const res = await fetch(state.settings.backendUrl + '/edit', { method: 'POST', body: formData });
                 if (!res.ok) {
                     if (res.status === 404) throw new Error('Seu backend ainda não tem o endpoint POST /edit. É ele quem precisa cortar o vídeo, gravar as legendas e misturar a trilha — configure-o para aceitar file_id, start, end, top_text, bottom_text, audio_style e audio_file, e devolver { video_url } (ou { job_id } para acompanhar o progresso).');
                     throw new Error('O servidor respondeu com erro ' + res.status + ' ao renderizar.');
                 }
                 let data = await res.json();
- 
+
                 if (data.job_id && !data.video_url) {
                     statusText.innerHTML = '<i class="ph ph-spinner animate-spin" aria-hidden="true"></i> Processando no servidor, isso pode levar um pouco...';
                     data = await pollRenderJob(data.job_id);
                 }
- 
+
                 if (!data.video_url) throw new Error('O servidor não retornou o link do vídeo renderizado (video_url).');
- 
+
                 $('renderStatusPanel').classList.add('hidden');
                 $('renderResultPanel').classList.remove('hidden');
                 $('renderResultVideo').src = data.video_url;
- 
+
                 seg.renderedUrl = data.video_url;
                 seg.topText = topText; seg.bottomText = bottomText; seg.audioStyle = audioStyle;
                 seg._suggestionApplied = true;
- 
+
                 renderSegments();
                 logActivity('Vídeo renderizado com legenda e trilha: ' + seg.label);
                 toast('Vídeo renderizado com sucesso.', 'ph-check-circle');
@@ -1551,11 +1551,11 @@ DOCTYPE html>
                 btn.textContent = 'Renderizar vídeo';
             }
         });
- 
+
         // ================= MEME LAB =================
         const memeCanvas = $('memeCanvas');
         const memeState = { img: null, fileName: '' };
- 
+
         function wrapMemeLines(ctx, text, maxWidth) {
             const words = text.split(/\s+/).filter(Boolean);
             const lines = [];
@@ -1572,7 +1572,7 @@ DOCTYPE html>
             if (current) lines.push(current);
             return lines;
         }
- 
+
         function drawMeme() {
             if (!memeState.img) return;
             const img = memeState.img;
@@ -1582,11 +1582,11 @@ DOCTYPE html>
             memeCanvas.height = Math.round(img.naturalHeight * scale);
             const ctx = memeCanvas.getContext('2d');
             ctx.drawImage(img, 0, 0, memeCanvas.width, memeCanvas.height);
- 
+
             const topText = $('memeTopText').value.trim().toUpperCase();
             const bottomText = $('memeBottomText').value.trim().toUpperCase();
             if (!topText && !bottomText) return;
- 
+
             const fontSize = Math.max(20, Math.round(memeCanvas.width / 12));
             ctx.font = '900 ' + fontSize + 'px "Arial Black", Impact, sans-serif';
             ctx.textAlign = 'center';
@@ -1597,7 +1597,7 @@ DOCTYPE html>
             const maxTextWidth = memeCanvas.width * 0.92;
             const lineHeight = fontSize * 1.12;
             const cx = memeCanvas.width / 2;
- 
+
             if (topText) {
                 ctx.textBaseline = 'top';
                 wrapMemeLines(ctx, topText, maxTextWidth).forEach((line, i) => {
@@ -1616,7 +1616,7 @@ DOCTYPE html>
                 });
             }
         }
- 
+
         function loadMemeImage(file) {
             if (!file || !file.type.startsWith('image/')) {
                 toast('Esse arquivo não é uma imagem. Use PNG, JPG ou WebP.', 'ph-warning');
@@ -1635,7 +1635,7 @@ DOCTYPE html>
             img.onerror = () => toast('Não conseguimos abrir essa imagem. Tente outro arquivo.', 'ph-warning');
             img.src = URL.createObjectURL(file);
         }
- 
+
         $('btnBrowseMeme').addEventListener('click', (e) => { e.stopPropagation(); $('memeFileInput').click(); });
         $('memeUploadZone').addEventListener('click', () => $('memeFileInput').click());
         $('memeUploadZone').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('memeFileInput').click(); });
@@ -1653,7 +1653,7 @@ DOCTYPE html>
         });
         $('memeTopText').addEventListener('input', drawMeme);
         $('memeBottomText').addEventListener('input', drawMeme);
- 
+
         $('btnMemeSuggest').addEventListener('click', async () => {
             if (!state.settings.apiKey) {
                 openSettings();
@@ -1678,479 +1678,4 @@ DOCTYPE html>
                     },
                     { role: 'user', content: 'O que aparece na imagem: ' + context }
                 ], { json: true });
-                const parsed = JSON.parse(raw.replace(/^```(json)?|```$/g, '').trim());
-                const memes = (parsed.memes || []).filter(m => (m.top || m.bottom)).slice(0, 4);
-                if (!memes.length) throw new Error('vazio');
-                $('memeSuggestions').classList.remove('hidden');
-                $('memeSuggestionList').innerHTML = memes.map((m, i) => `
-                    <button class="w-full text-left glass-card p-3 hover:border-emerald-500/50 transition-colors" data-meme-idx="${i}">
-                        ${m.top ? `<p class="text-xs text-zinc-200 font-semibold uppercase">${escapeHtml(m.top)}</p>` : ''}
-                        ${m.bottom ? `<p class="text-xs text-zinc-400 uppercase">${escapeHtml(m.bottom)}</p>` : ''}
-                    </button>`).join('');
-                $('memeSuggestionList').querySelectorAll('[data-meme-idx]').forEach(el => {
-                    el.addEventListener('click', () => {
-                        const m = memes[Number(el.dataset.memeIdx)];
-                        $('memeTopText').value = m.top || '';
-                        $('memeBottomText').value = m.bottom || '';
-                        drawMeme();
-                    });
-                });
-            } catch (err) {
-                toast(err.message === 'vazio' ? 'A IA não retornou sugestões. Tente reformular a descrição.' : err.message, 'ph-warning');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="ph ph-sparkle mr-1" aria-hidden="true"></i>Sugerir legendas';
-            }
-        });
- 
-        $('btnMemeDownload').addEventListener('click', () => {
-            if (!memeState.img) return;
-            drawMeme();
-            const link = document.createElement('a');
-            link.download = 'meme-viralize-' + Date.now() + '.png';
-            link.href = memeCanvas.toDataURL('image/png');
-            link.click();
-            logActivity('Meme exportado: ' + memeState.fileName);
-        });
- 
-        $('btnMemeSave').addEventListener('click', () => {
-            if (!memeState.img) return;
-            drawMeme();
-            state.memes.push({
-                id: 'meme-' + Date.now(),
-                top: $('memeTopText').value.trim(),
-                bottom: $('memeBottomText').value.trim(),
-                source: memeState.fileName,
-                thumb: memeCanvas.toDataURL('image/jpeg', 0.7),
-                createdAt: Date.now()
-            });
-            if (!saveMemes()) { state.memes.pop(); return; }
-            updateSidebarCounts();
-            logActivity('Meme salvo na biblioteca');
-            toast('Meme salvo na biblioteca.', 'ph-check-circle');
-        });
- 
-        // ================= LIBRARY =================
-        function updateSidebarCounts() {
-            const total = state.clips.length + state.memes.length;
-            $('libraryCount').textContent = total ? total : '';
-        }
- 
-        function renderLibrary() {
-            const filter = $('libraryFilter').value;
-            const clips = filter === 'meme' ? [] : state.clips.filter(c => filter === 'all' || c.status === filter);
-            const memes = (filter === 'all' || filter === 'meme') ? state.memes : [];
-            const empty = $('libraryEmpty'), grid = $('libraryGrid');
-            if (!clips.length && !memes.length) {
-                empty.classList.remove('hidden');
-                grid.classList.add('hidden');
-                empty.querySelector('p').textContent = (state.clips.length + state.memes.length) ? 'Nada nesse filtro.' : 'Sua biblioteca está vazia.';
-                return;
-            }
-            empty.classList.add('hidden');
-            grid.classList.remove('hidden');
-            const memeCards = memes.map(m => `
-                <div class="glass-card overflow-hidden">
-                    <div class="aspect-video bg-zinc-900 flex items-center justify-center">
-                        <img src="${m.thumb}" alt="" class="w-full h-full object-contain">
-                    </div>
-                    <div class="p-3">
-                        <p class="text-sm font-medium text-white truncate mb-1">${escapeHtml(m.top || m.bottom || 'Meme')}</p>
-                        <p class="text-[11px] text-zinc-500 truncate mb-1">${escapeHtml(m.source)}</p>
-                        <p class="text-[11px] text-zinc-500 mb-3">Meme</p>
-                        <div class="flex gap-2">
-                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-meme-action="download" data-id="${m.id}">Baixar</button>
-                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-meme-action="delete" data-id="${m.id}">Excluir</button>
-                        </div>
-                    </div>
-                </div>`).join('');
-            grid.innerHTML = memeCards + clips.map(c => `
-                <div class="glass-card overflow-hidden">
-                    <div class="aspect-video bg-zinc-900 flex items-center justify-center">
-                        ${c.thumb ? `<img src="${c.thumb}" alt="" class="w-full h-full object-cover">` : `<i class="ph ph-film-strip text-2xl text-zinc-700" aria-hidden="true"></i>`}
-                    </div>
-                    <div class="p-3">
-                        <div class="flex items-center justify-between gap-2 mb-1">
-                            <p class="text-sm font-medium text-white truncate">${escapeHtml(c.title)}</p>
-                            ${c.score != null ? `<span class="text-xs font-semibold ${c.score >= 75 ? 'text-emerald-500' : 'text-zinc-400'} shrink-0">${c.score}</span>` : ''}
-                        </div>
-                        <p class="text-[11px] text-zinc-500 truncate mb-1">${escapeHtml(c.source)} · ${fmtTime(c.start)}–${fmtTime(c.end)}</p>
-                        <p class="text-[11px] ${c.status === 'scheduled' ? 'text-emerald-500' : 'text-zinc-500'} mb-1">${c.status === 'scheduled' ? 'Agendado' : 'Rascunho'}</p>
-                        <p class="text-[11px] ${c.renderedUrl ? 'text-emerald-500' : 'text-zinc-600'} mb-3">${c.renderedUrl ? '✓ Editado com legenda e trilha' : 'Sem edição aplicada'}</p>
-                        <div class="flex flex-wrap gap-2">
-                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-lib-action="schedule" data-id="${c.id}">Planejar</button>
-                            ${c.renderedUrl ? `<a href="${c.renderedUrl}" target="_blank" rel="noopener" class="btn-secondary !py-1 !px-2 !text-[11px]">Baixar</a>` : ''}
-                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-lib-action="delete" data-id="${c.id}">Excluir</button>
-                        </div>
-                    </div>
-                </div>`).join('');
- 
-            grid.querySelectorAll('button[data-lib-action]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const { libAction, id } = btn.dataset;
-                    if (libAction === 'delete') {
-                        state.clips = state.clips.filter(c => c.id !== id);
-                        state.schedule = state.schedule.filter(s => s.clipId !== id);
-                        saveClips(); saveSchedule();
-                        updateSidebarCounts();
-                        renderLibrary();
-                        toast('Clip removido.', 'ph-trash');
-                    }
-                    if (libAction === 'schedule') openScheduleModal(new Date(), id);
-                });
-            });
- 
-            grid.querySelectorAll('button[data-meme-action]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const { memeAction, id } = btn.dataset;
-                    const meme = state.memes.find(m => m.id === id);
-                    if (!meme) return;
-                    if (memeAction === 'delete') {
-                        state.memes = state.memes.filter(m => m.id !== id);
-                        saveMemes();
-                        updateSidebarCounts();
-                        renderLibrary();
-                        toast('Meme removido.', 'ph-trash');
-                    }
-                    if (memeAction === 'download') {
-                        const link = document.createElement('a');
-                        link.download = 'meme-viralize-' + id + '.jpg';
-                        link.href = meme.thumb;
-                        link.click();
-                    }
-                });
-            });
-        }
-        $('libraryFilter').addEventListener('change', renderLibrary);
- 
-        // ================= CALENDAR =================
-        const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
- 
-        function renderCalendar() {
-            $('calTitle').textContent = MONTHS[state.calMonth] + ' ' + state.calYear;
-            const first = new Date(state.calYear, state.calMonth, 1);
-            const daysInMonth = new Date(state.calYear, state.calMonth + 1, 0).getDate();
-            const startDow = first.getDay();
-            const today = new Date();
-            const cells = [];
-            for (let i = 0; i < startDow; i++) cells.push('<div class="bg-[#0c0c0e] min-h-[88px]"></div>');
-            for (let d = 1; d <= daysInMonth; d++) {
-                const dateKey = `${state.calYear}-${String(state.calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const isToday = today.getFullYear() === state.calYear && today.getMonth() === state.calMonth && today.getDate() === d;
-                const posts = state.schedule.filter(s => s.date === dateKey);
-                cells.push(`
-                    <div class="bg-[#0c0c0e] min-h-[88px] p-1.5 hover:bg-[#101014] cursor-pointer transition-colors" data-date="${dateKey}" role="button" tabindex="0" aria-label="Planejar para ${d} de ${MONTHS[state.calMonth]}">
-                        <p class="text-[11px] ${isToday ? 'text-emerald-500 font-semibold' : 'text-zinc-500'} mb-1">${d}</p>
-                        ${posts.map(p => `<div class="text-[10px] text-zinc-300 bg-[#18181b] border border-[#27272a] rounded px-1.5 py-0.5 mb-1 truncate" title="${escapeHtml(p.clipTitle)} · ${p.platform} ${p.time}">${p.time} · ${escapeHtml(p.platform)}</div>`).join('')}
-                    </div>`);
-            }
-            $('calGrid').innerHTML = cells.join('');
-            $('calGrid').querySelectorAll('[data-date]').forEach(cell => {
-                const open = () => {
-                    if (!state.clips.length) {
-                        toast('Salve um clip na biblioteca antes de planejar publicações.', 'ph-info');
-                        return;
-                    }
-                    openScheduleModal(new Date(cell.dataset.date + 'T12:00:00'));
-                };
-                cell.addEventListener('click', open);
-                cell.addEventListener('keydown', (e) => { if (e.key === 'Enter') open(); });
-            });
-        }
-        $('calPrev').addEventListener('click', () => {
-            state.calMonth--;
-            if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
-            renderCalendar();
-        });
-        $('calNext').addEventListener('click', () => {
-            state.calMonth++;
-            if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
-            renderCalendar();
-        });
- 
-        let scheduleDate = null;
-        function openScheduleModal(date, preselectClipId = null) {
-            if (!state.clips.length) {
-                toast('Salve um clip na biblioteca antes de planejar publicações.', 'ph-info');
-                return;
-            }
-            scheduleDate = date;
-            $('scheduleSubtitle').textContent = 'Para ' + date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) + '.';
-            $('scheduleClip').innerHTML = state.clips.map(c =>
-                `<option value="${c.id}" ${c.id === preselectClipId ? 'selected' : ''}>${escapeHtml(c.title)} (${fmtTime(c.start)}–${fmtTime(c.end)})</option>`).join('');
-            $('scheduleModal').classList.remove('hidden');
-            $('scheduleModal').classList.add('flex');
-        }
-        function closeScheduleModal() {
-            $('scheduleModal').classList.add('hidden');
-            $('scheduleModal').classList.remove('flex');
-        }
-        $('closeSchedule').addEventListener('click', closeScheduleModal);
-        $('saveSchedule').addEventListener('click', () => {
-            const clipId = $('scheduleClip').value;
-            const clip = state.clips.find(c => c.id === clipId);
-            if (!clip || !scheduleDate) return;
-            const dateKey = `${scheduleDate.getFullYear()}-${String(scheduleDate.getMonth() + 1).padStart(2, '0')}-${String(scheduleDate.getDate()).padStart(2, '0')}`;
-            state.schedule.push({
-                id: 'post-' + Date.now(),
-                clipId, clipTitle: clip.title,
-                platform: $('schedulePlatform').value,
-                time: $('scheduleTime').value,
-                date: dateKey
-            });
-            clip.status = 'scheduled';
-            saveClips(); saveSchedule();
-            logActivity('Publicação planejada: ' + clip.title + ' → ' + $('schedulePlatform').value);
-            closeScheduleModal();
-            renderCalendar();
-            toast('Publicação adicionada ao calendário.', 'ph-calendar-check');
-        });
- 
-        // ================= ANALYTICS =================
-        function renderAnalytics() {
-            $('anClips').textContent = state.clips.length;
-            const scores = state.clips.filter(c => c.score != null).map(c => c.score);
-            $('anScore').textContent = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : '—';
-            const durations = state.clips.map(c => c.end - c.start);
-            $('anDuration').textContent = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) + 's' : '—';
- 
-            let insight;
-            if (!state.clips.length) {
-                insight = 'Ainda não há dados do seu trabalho. Analise um briefing na Sala de Guerra e salve os primeiros cortes no Video Lab — as leituras da equipe aparecem aqui conforme você produz.';
-            } else {
-                const best = [...state.clips].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
-                const scheduled = state.schedule.length;
-                insight = `Você já tem ${state.clips.length} ${state.clips.length === 1 ? 'clip' : 'clips'} na biblioteca.` +
-                    (best?.score != null ? ` O de maior potencial é "${best.title}" (score ${best.score}).` : '') +
-                    (scheduled ? ` ${scheduled} ${scheduled === 1 ? 'publicação planejada' : 'publicações planejadas'} no calendário.` : ' Nenhuma publicação planejada ainda — abra o Calendário para organizar a distribuição.');
-            }
-            $('anInsight').textContent = insight;
-        }
- 
-        // ================= HOME =================
-        function renderHome() {
-            const h = new Date().getHours();
-            const greet = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
-            $('homeGreeting').textContent = greet + ', Creator';
-            $('statBriefings').textContent = state.briefingCount;
-            $('statClips').textContent = state.clips.length;
-            $('statScheduled').textContent = state.schedule.length;
- 
-            let next;
-            if (!state.settings.apiKey) {
-                next = '<button class="btn-primary" id="homeCtaSettings">Configurar a engine de IA</button><p class="text-xs text-zinc-500 mt-2">Adicione sua chave da OpenRouter para ativar a equipe.</p>';
-            } else if (!state.briefingCount) {
-                next = '<button class="btn-primary" data-goto="war-room">Enviar o primeiro briefing</button><p class="text-xs text-zinc-500 mt-2">Conte para a equipe o que você gravou.</p>';
-            } else if (!state.clips.length) {
-                next = '<button class="btn-primary" data-goto="video-lab">Marcar cortes no Video Lab</button><p class="text-xs text-zinc-500 mt-2">Importe o vídeo e salve os melhores momentos.</p>';
-            } else if (!state.schedule.length) {
-                next = '<button class="btn-primary" data-goto="calendar">Planejar as publicações</button><p class="text-xs text-zinc-500 mt-2">Organize quando cada clip vai ao ar.</p>';
-            } else {
-                next = '<p class="text-sm text-zinc-300">Fluxo em andamento. Continue enviando briefings ou revise o calendário.</p>';
-            }
-            $('homeNextStep').innerHTML = next;
-            $('homeNextStep').querySelectorAll('[data-goto]').forEach(btn =>
-                btn.addEventListener('click', () => showView(btn.dataset.goto)));
-            $('homeNextStep').querySelector('#homeCtaSettings')?.addEventListener('click', openSettings);
- 
-            const act = $('homeActivity');
-            if (!state.activity.length) {
-                act.innerHTML = '<p class="text-sm text-zinc-600 py-4">Nenhuma atividade ainda.</p>';
-            } else {
-                act.innerHTML = state.activity.map(a => `
-                    <div class="py-3 flex items-center gap-3">
-                        <span class="text-sm text-zinc-300 flex-1 min-w-0 truncate">${escapeHtml(a.text)}</span>
-                        <span class="text-[11px] text-zinc-600 shrink-0">${new Date(a.at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} ${new Date(a.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>`).join('');
-            }
-        }
- 
-        // ================= AUTH (Supabase) =================
-        let sb = null;
-        let authMode = 'signin'; // signin | signup
- 
-        function showAuthOverlay(show) {
-            $('authOverlay').classList.toggle('hidden', !show);
-            $('authOverlay').classList.toggle('flex', show);
-        }
- 
-        function authFeedback(error, info) {
-            $('authError').textContent = error || '';
-            $('authError').classList.toggle('hidden', !error);
-            $('authInfo').textContent = info || '';
-            $('authInfo').classList.toggle('hidden', !info);
-        }
- 
-        function renderSidebarUser() {
-            const email = state.session?.user?.email;
-            $('userName').textContent = email ? email.split('@')[0] : 'Creator';
-            $('userSub').textContent = email ? email : 'Sessão local';
-            $('btnLogout').classList.toggle('hidden', !email);
-            const planLabel = { free: '', creator: 'Creator', pro: 'Pro' }[state.plan] || '';
-            $('planBadge').textContent = planLabel;
-        }
- 
-        async function loadProfilePlan() {
-            state.plan = 'free';
-            if (sb && state.session) {
-                try {
-                    const { data } = await sb.from('profiles').select('plan').eq('id', state.session.user.id).maybeSingle();
-                    if (data?.plan) state.plan = data.plan;
-                } catch { /* tabela ainda não criada — mantém free */ }
-            }
-            renderSidebarUser();
-        }
- 
-        function initAuth() {
-            const { supabaseUrl, supabaseKey } = state.settings;
-            if (!supabaseUrl || !supabaseKey || !window.supabase) {
-                sb = null; state.session = null; state.plan = 'free';
-                showAuthOverlay(false);
-                renderSidebarUser();
-                return;
-            }
-            try {
-                sb = window.supabase.createClient(supabaseUrl, supabaseKey);
-            } catch {
-                toast('URL ou chave do Supabase inválida.', 'ph-warning');
-                return;
-            }
-            sb.auth.getSession().then(({ data: { session } }) => {
-                state.session = session;
-                if (!session && !state.authSkipped) showAuthOverlay(true);
-                else showAuthOverlay(false);
-                loadProfilePlan();
-            });
-            sb.auth.onAuthStateChange((_event, session) => {
-                state.session = session;
-                if (session) {
-                    showAuthOverlay(false);
-                    toast('Sessão iniciada.', 'ph-check-circle');
-                }
-                loadProfilePlan();
-            });
-        }
- 
-        $('authToggleMode').addEventListener('click', () => {
-            authMode = authMode === 'signin' ? 'signup' : 'signin';
-            $('authTitle').textContent = authMode === 'signin' ? 'Entrar' : 'Criar conta';
-            $('authSubtitle').textContent = authMode === 'signin'
-                ? 'Use seu e-mail e senha para acessar o workspace.'
-                : 'Crie sua conta para salvar seu trabalho na nuvem.';
-            $('authSubmit').textContent = authMode === 'signin' ? 'Entrar' : 'Criar conta';
-            $('authToggleMode').textContent = authMode === 'signin' ? 'Criar conta' : 'Já tenho conta';
-            authFeedback('', '');
-        });
- 
-        $('authSubmit').addEventListener('click', async () => {
-            if (!sb) return;
-            const email = $('authEmail').value.trim();
-            const password = $('authPassword').value;
-            if (!email || !password) { authFeedback('Preencha e-mail e senha.'); return; }
-            $('authSubmit').disabled = true;
-            try {
-                if (authMode === 'signin') {
-                    const { error } = await sb.auth.signInWithPassword({ email, password });
-                    if (error) throw error;
-                } else {
-                    const { data, error } = await sb.auth.signUp({ email, password });
-                    if (error) throw error;
-                    if (!data.session) authFeedback('', 'Conta criada. Confirme pelo link enviado ao seu e-mail para entrar.');
-                }
-            } catch (error) {
-                const msg = /invalid login/i.test(error.message) ? 'E-mail ou senha incorretos.'
-                    : /already registered/i.test(error.message) ? 'Esse e-mail já tem conta. Use "Entrar".'
-                    : /at least 6/i.test(error.message) ? 'A senha precisa de pelo menos 6 caracteres.'
-                    : error.message;
-                authFeedback(msg);
-            } finally {
-                $('authSubmit').disabled = false;
-            }
-        });
- 
-        $('authForgot').addEventListener('click', async () => {
-            if (!sb) return;
-            const email = $('authEmail').value.trim();
-            if (!email) { authFeedback('Digite seu e-mail acima para receber o link de recuperação.'); return; }
-            const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-            if (error) authFeedback(error.message);
-            else authFeedback('', 'Enviamos um link de recuperação para ' + email + '.');
-        });
- 
-        $('authSkip').addEventListener('click', () => {
-            state.authSkipped = true;
-            store.set('authSkipped', true);
-            showAuthOverlay(false);
-            toast('Modo local: seu trabalho fica salvo apenas neste navegador.', 'ph-info');
-        });
- 
-        $('btnLogout').addEventListener('click', async () => {
-            if (!sb) return;
-            await sb.auth.signOut();
-            state.session = null; state.plan = 'free';
-            state.authSkipped = false;
-            store.set('authSkipped', false);
-            renderSidebarUser();
-            showAuthOverlay(true);
-        });
- 
-        // ================= PLAN / BILLING (Mercado Pago via backend) =================
-        const PLAN_NAMES = { free: 'Free', creator: 'Creator', pro: 'Pro' };
- 
-        function renderPlan() {
-            $('planCurrent').textContent = PLAN_NAMES[state.plan] || 'Free';
-            document.querySelectorAll('button[data-plan]').forEach(btn => {
-                const isCurrent = btn.dataset.plan === state.plan;
-                btn.disabled = isCurrent;
-                btn.textContent = isCurrent ? 'Plano atual' : 'Assinar ' + PLAN_NAMES[btn.dataset.plan];
-            });
-        }
- 
-        document.querySelectorAll('button[data-plan]').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const plan = btn.dataset.plan;
-                if (!state.settings.backendUrl) {
-                    openSettings();
-                    toast('Configure a URL do backend para ativar a assinatura.', 'ph-info');
-                    return;
-                }
-                if (sb && !state.session) {
-                    showAuthOverlay(true);
-                    toast('Entre na sua conta antes de assinar.', 'ph-info');
-                    return;
-                }
-                btn.disabled = true;
-                const original = btn.textContent;
-                btn.textContent = 'Abrindo checkout...';
-                try {
-                    const res = await fetch(state.settings.backendUrl + '/billing/checkout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ plan, email: state.session?.user?.email || '', user_id: state.session?.user?.id || '' })
-                    });
-                    if (!res.ok) throw new Error('O backend respondeu com erro ' + res.status + '. Verifique se o endpoint /billing/checkout está publicado.');
-                    const data = await res.json();
-                    if (!data.init_point) throw new Error('O backend não retornou o link de pagamento (init_point).');
-                    window.open(data.init_point, '_blank');
-                    toast('Checkout do Mercado Pago aberto em nova aba.', 'ph-check-circle');
-                } catch (error) {
-                    toast(error.message, 'ph-warning');
-                } finally {
-                    btn.disabled = false;
-                    btn.textContent = original;
-                    renderPlan();
-                }
-            });
-        });
- 
-        // ================= INIT =================
-        renderAgentList();
-        refreshEngineStatus();
-        updateSidebarCounts();
-        checkBackend();
-        renderSidebarUser();
-        initAuth();
-    </script>
-</body>
-</html>
- 
+                const parsed = JSON.parse(raw.replace(/^```(json)?|
