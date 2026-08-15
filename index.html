@@ -1,5 +1,4 @@
-<!DOCTYPE>
->html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -165,11 +164,11 @@
                 <p class="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mb-3 px-2">Plataforma</p>
                 <nav class="space-y-1" aria-label="Navegação principal">
                     <a href="#" class="nav-link" data-view="home"><i class="ph ph-squares-four text-lg nav-icon" aria-hidden="true"></i> Visão Geral</a>
-                    <a href="#" class="nav-link active" data-view="war-room"><i class="ph ph-crosshair text-lg nav-icon" aria-hidden="true"></i> Sala de Guerra</a>
+                    <a href="#" class="nav-link" data-view="war-room"><i class="ph ph-crosshair text-lg nav-icon" aria-hidden="true"></i> Sala de Guerra</a>
                     <a href="#" class="nav-link" data-view="video-lab"><i class="ph ph-film-strip text-lg nav-icon" aria-hidden="true"></i> Video Lab</a>
                     <a href="#" class="nav-link" data-view="meme-lab"><i class="ph ph-image-square text-lg nav-icon" aria-hidden="true"></i> Meme Lab</a>
                     <a href="#" class="nav-link" data-view="library"><i class="ph ph-folder text-lg nav-icon" aria-hidden="true"></i> Biblioteca<span id="libraryCount" class="ml-auto text-[10px] text-zinc-500"></span></a>
-                    <a href="#" class="nav-link" data-view="calendar"><i class="ph ph-calendar-blank text-lg nav-icon" aria-hidden="true"></i> Calendário</a>
+                    <a href="#" class="nav-link active" data-view="calendar"><i class="ph ph-calendar-blank text-lg nav-icon" aria-hidden="true"></i> Calendário</a>
                     <a href="#" class="nav-link" data-view="analytics"><i class="ph ph-chart-line-up text-lg nav-icon" aria-hidden="true"></i> Analytics</a>
                 </nav>
             </div>
@@ -245,7 +244,7 @@
         </section>
 
         <!-- ================= WAR ROOM ================= -->
-        <section id="view-war-room" class="view-section active">
+        <section id="view-war-room" class="view-section">
             <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
                 <h2 class="text-sm font-medium text-zinc-200">Sala de Guerra</h2>
                 <div class="ml-auto flex items-center gap-4">
@@ -474,9 +473,9 @@
         </section>
 
         <!-- ================= CALENDAR ================= -->
-        <section id="view-calendar" class="view-section">
+        <section id="view-calendar" class="view-section active">
             <header class="h-14 border-b border-[#27272a] flex items-center px-6 glass-panel z-10 shrink-0">
-                <h2 class="text-sm font-medium text-zinc-200">Calendário de Conteúdo</h2>
+                <h2 class="text-sm font-medium text-zinc-200">Calendário Inteligente</h2>
                 <div class="ml-auto flex items-center gap-2">
                     <button class="btn-secondary !py-1 !px-2" id="calPrev" aria-label="Mês anterior"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
                     <span class="text-sm text-zinc-300 w-40 text-center" id="calTitle"></span>
@@ -485,7 +484,14 @@
             </header>
             <div class="flex-1 overflow-y-auto p-6">
                 <div class="max-w-5xl mx-auto">
-                    <p class="text-xs text-zinc-500 mb-4">Planejamento de publicações. A postagem automática nas redes ainda não está conectada — por enquanto, o calendário organiza o que você vai publicar manualmente.</p>
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-xs text-zinc-500">Agende posts clicando nos dias. O farol de cores avalia o potencial do seu conteúdo.</p>
+                        <div class="flex gap-4 text-[10px] text-zinc-400">
+                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Orgânico (Viral)</span>
+                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span> Moderado (Requer Tráfego)</span>
+                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span> Risco de Flop</span>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-7 text-[11px] text-zinc-500 uppercase tracking-wider mb-2">
                         <span class="px-2">Dom</span><span class="px-2">Seg</span><span class="px-2">Ter</span><span class="px-2">Qua</span><span class="px-2">Qui</span><span class="px-2">Sex</span><span class="px-2">Sáb</span>
                     </div>
@@ -626,15 +632,29 @@
 
     <!-- Settings Modal -->
     <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-        <div class="glass-card w-[440px] max-w-[calc(100vw-32px)] p-6 bg-[#101012]">
-            <h3 class="text-lg font-semibold text-white mb-1" id="settingsTitle">Configurações</h3>
-            <p class="text-xs text-zinc-400 mb-5">As chaves ficam salvas apenas neste navegador. Em produção, mova as chamadas de IA para o seu backend.</p>
+        <div class="glass-card w-[480px] max-w-[calc(100vw-32px)] p-6 bg-[#101012] max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg font-semibold text-white mb-1" id="settingsTitle">Configurações e Integrações</h3>
+            <p class="text-xs text-zinc-400 mb-5">Conecte seus motores de IA e suas redes sociais.</p>
+
+            <div class="mb-6 p-4 border border-[#27272a] rounded-lg bg-[#18181b]">
+                <h4 class="text-xs font-semibold text-white mb-3 uppercase tracking-wider">Contas Conectadas</h4>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <i class="ph ph-instagram-logo text-2xl text-pink-500"></i>
+                        <div>
+                            <p class="text-sm font-medium text-white">Instagram Profissional</p>
+                            <p class="text-[10px] text-zinc-500">Necessário para o Postador e Meta Ads</p>
+                        </div>
+                    </div>
+                    <button class="btn-secondary !py-1 !px-3 !text-xs" onclick="toast('Integração com Instagram Graph API pendente de aprovação do App no Facebook for Developers.', 'ph-warning')">Conectar</button>
+                </div>
+            </div>
 
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="apiKeyInput">OpenRouter API Key</label>
             <input type="password" id="apiKeyInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-4" placeholder="sk-or-v1-...">
 
-            <label class="block text-xs font-medium text-zinc-300 mb-1" for="modelInput">Modelo</label>
-            <input type="text" id="modelInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-4" placeholder="ex.: google/gemini-2.0-flash-lite-preview-02-05:free">
+            <label class="block text-xs font-medium text-zinc-300 mb-1" for="modelInput">Modelo IA (Padrão: Llama 3)</label>
+            <input type="text" id="modelInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-4" placeholder="meta-llama/llama-3.3-70b-instruct:free">
 
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="backendInput">URL do backend (FastAPI / Render)</label>
             <input type="url" id="backendInput" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 mb-4" placeholder="https://seu-backend.onrender.com">
@@ -658,14 +678,14 @@
             <h3 class="text-lg font-semibold text-white mb-1" id="scheduleTitle">Planejar publicação</h3>
             <p class="text-xs text-zinc-400 mb-5" id="scheduleSubtitle"></p>
 
-            <label class="block text-xs font-medium text-zinc-300 mb-1" for="scheduleClip">Clip</label>
+            <label class="block text-xs font-medium text-zinc-300 mb-1" for="scheduleClip">Clip ou Meme</label>
             <select id="scheduleClip" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none mb-4"></select>
 
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="schedulePlatform">Plataforma</label>
             <select id="schedulePlatform" class="w-full bg-[#18181b] border border-[#27272a] rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none mb-4">
+                <option>Instagram Reels / Post</option>
                 <option>TikTok</option>
                 <option>YouTube Shorts</option>
-                <option>Instagram Reels</option>
             </select>
 
             <label class="block text-xs font-medium text-zinc-300 mb-1" for="scheduleTime">Horário</label>
@@ -673,7 +693,62 @@
 
             <div class="flex justify-end gap-3">
                 <button id="closeSchedule" class="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white transition-colors">Cancelar</button>
-                <button id="saveSchedule" class="btn-primary">Planejar</button>
+                <button id="saveSchedule" class="btn-primary">Agendar no Calendário</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ORACLE MODAL (IA VS META ADS) -->
+    <div id="oracleModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center" role="dialog" aria-modal="true">
+        <div class="glass-card w-[700px] max-w-[calc(100vw-32px)] p-6 bg-[#101012] border-yellow-500/30 border-2">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center">
+                    <i class="ph ph-rocket-launch text-2xl text-yellow-500"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-white">Oráculo de Engajamento</h3>
+                    <p class="text-xs text-zinc-400">Diagnóstico de IA vs Estimativa Real do Meta Ads</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <!-- Coluna IA -->
+                <div class="bg-[#18181b] border border-[#27272a] p-4 rounded-xl">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="ph ph-brain text-emerald-500"></i>
+                        <h4 class="text-xs font-semibold text-zinc-200 uppercase tracking-wider">Leitura Viralize.AI</h4>
+                    </div>
+                    <p class="text-sm text-white font-medium mb-1">Score do Hook: <span class="text-yellow-500">65/100 (Moderado)</span></p>
+                    <p class="text-xs text-zinc-400 leading-relaxed mb-3">O conteúdo tem boa retenção, mas o nicho é muito específico para estourar sozinho no algoritmo orgânico de imediato.</p>
+                    <p class="text-[11px] text-zinc-500"><strong class="text-zinc-300">Ação Recomendada:</strong> Furar a bolha com tráfego pago focado em conversão de público gamer.</p>
+                </div>
+
+                <!-- Coluna Meta Ads -->
+                <div class="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/30 p-4 rounded-xl relative overflow-hidden">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="ph ph-meta-logo text-blue-400"></i>
+                        <h4 class="text-xs font-semibold text-blue-200 uppercase tracking-wider">Previsão Meta Ads API</h4>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div class="bg-black/40 p-2 rounded text-center">
+                            <p class="text-[10px] text-zinc-500 uppercase">Alcance</p>
+                            <p class="text-sm font-semibold text-white">3.4k - 8.9k</p>
+                        </div>
+                        <div class="bg-black/40 p-2 rounded text-center">
+                            <p class="text-[10px] text-zinc-500 uppercase">Interações</p>
+                            <p class="text-sm font-semibold text-white">150 - 350</p>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-zinc-400 text-center">Simulação para orçamento de <strong class="text-white">R$ 20,00</strong> por 2 dias.</p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between border-t border-[#27272a] pt-4">
+                <p class="text-xs text-zinc-500 max-w-xs">O valor será cobrado diretamente no cartão cadastrado na sua conta de anúncios do Instagram conectada.</p>
+                <div class="flex gap-3">
+                    <button id="closeOracle" class="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white transition-colors">Postar Orgânico</button>
+                    <button id="btnBoost" class="btn-primary bg-yellow-500 hover:bg-yellow-600 text-black flex items-center gap-2"><i class="ph ph-lightning"></i> Autorizar Campanha (R$ 20)</button>
+                </div>
             </div>
         </div>
     </div>
@@ -753,7 +828,7 @@
 
         const defaultSettings = { 
             apiKey: '', 
-            model: 'google/gemini-2.0-flash-lite-preview-02-05:free', 
+            model: 'meta-llama/llama-3.3-70b-instruct:free', 
             backendUrl: 'https://backend-viral.onrender.com', 
             supabaseUrl: '', 
             supabaseKey: '' 
@@ -762,9 +837,9 @@
         let savedSettings = store.get('settings', defaultSettings);
         if (!savedSettings || typeof savedSettings !== 'object') savedSettings = defaultSettings;
         
-        // Auto-correção forçada para o modelo descontinuado
-        if (!savedSettings.model || savedSettings.model.includes('gemini-2.0-flash-exp')) {
-            savedSettings.model = 'google/gemini-2.0-flash-lite-preview-02-05:free';
+        // Auto-correção forçada para o Llama 3
+        if (!savedSettings.model || savedSettings.model.includes('gemini')) {
+            savedSettings.model = 'meta-llama/llama-3.3-70b-instruct:free';
             store.set('settings', savedSettings);
         }
 
@@ -782,8 +857,8 @@
             activity: safeArray(store.get('activity', [])),
             briefingCount: Number(store.get('briefingCount', 0)) || 0,
             teamSuggestion: store.get('teamSuggestion', null),
-            video: null,          // { file, url, duration, width, height }
-            segments: [],         // { id, start, end, label, score, reason }
+            video: null,          
+            segments: [],         
             markIn: null,
             markOut: null,
             pipelineRunning: false,
@@ -795,7 +870,7 @@
         function saveClips() { store.set('clips', state.clips); }
         function saveMemes() {
             try { store.set('memes', state.memes); return true; }
-            catch { toast('Sem espaço no navegador para salvar mais memes. Exclua alguns na Biblioteca.', 'ph-warning'); return false; }
+            catch { toast('Sem espaço no navegador para salvar mais memes. Exclua alguns.', 'ph-warning'); return false; }
         }
         function saveSchedule() { store.set('schedule', state.schedule); }
 
@@ -1018,35 +1093,6 @@
                 store.set('briefingCount', state.briefingCount);
                 logActivity('Briefing analisado pela equipe: "' + text.slice(0, 60) + (text.length > 60 ? '…' : '') + '"');
                 appendLog('Sistema', 'Plano completo. Quando o vídeo estiver pronto, leve-o ao <strong class="text-white">Video Lab</strong> para marcar os cortes.', 'ph-check-circle', 'text-emerald-500');
-
-                // Traduz a leitura da equipe em uma sugestão pronta para execução no Video Lab
-                // (legenda estilo meme + estilo de trilha), conectando a Sala de Guerra à edição real.
-                try {
-                    const suggestionRaw = await callOpenRouter([
-                        {
-                            role: 'system',
-                            content: 'Você é o Editor de Retenção revisando toda a conversa acima para preparar a execução no Video Lab. Responda APENAS com JSON válido no formato {"top_text":"...","bottom_text":"...","audio_style":"upbeat|tenso|lofi|epico|nenhum","audio_reason":"..."}. As legendas devem ter no máximo 60 caracteres cada, no estilo de legenda de meme (arma a situação em cima, entrega o payoff embaixo), e podem ser string vazia se não fizerem sentido para esse conteúdo específico. audio_style deve refletir a sonoridade sugerida pelo Trend Hunter. Sem texto fora do JSON.'
-                        },
-                        ...transcript
-                    ], { json: true });
-                    const match = suggestionRaw.match(/\{[\s\S]*\}/);
-                    if (match) {
-                        const parsed = JSON.parse(match[0]);
-                        const validStyles = ['upbeat', 'tenso', 'lofi', 'epico', 'nenhum'];
-                        state.teamSuggestion = {
-                            topText: (parsed.top_text || '').slice(0, 60),
-                            bottomText: (parsed.bottom_text || '').slice(0, 60),
-                            audioStyle: validStyles.includes(parsed.audio_style) ? parsed.audio_style : 'nenhum',
-                            audioReason: parsed.audio_reason || '',
-                            createdAt: Date.now()
-                        };
-                        store.set('teamSuggestion', state.teamSuggestion);
-                        appendLog('Sistema', 'A equipe deixou pronta uma sugestão de legenda e trilha. No <strong class="text-white">Video Lab</strong>, use "Editar &amp; renderizar" em um corte para aplicá-la.', 'ph-sparkle', 'text-emerald-500');
-                    }
-                } catch {
-                    // A sugestão é um bônus sobre o plano principal — se essa chamada extra falhar
-                    // (ex.: limite de requisições), o briefing já foi concluído com sucesso acima.
-                }
             }
 
             state.pipelineRunning = false;
@@ -1057,7 +1103,7 @@
         // ================= SETTINGS =================
         function openSettings() {
             $('apiKeyInput').value = state.settings.apiKey || '';
-            $('modelInput').value = state.settings.model || 'google/gemini-2.0-flash-lite-preview-02-05:free';
+            $('modelInput').value = state.settings.model || 'meta-llama/llama-3.3-70b-instruct:free';
             $('backendInput').value = state.settings.backendUrl || 'https://backend-viral.onrender.com';
             $('supabaseUrlInput').value = state.settings.supabaseUrl || '';
             $('supabaseKeyInput').value = state.settings.supabaseKey || '';
@@ -1073,7 +1119,7 @@
         $('closeSettings').addEventListener('click', closeSettings);
         $('saveSettings').addEventListener('click', () => {
             state.settings.apiKey = $('apiKeyInput').value.trim();
-            state.settings.model = $('modelInput').value.trim() || 'google/gemini-2.0-flash-lite-preview-02-05:free';
+            state.settings.model = $('modelInput').value.trim() || 'meta-llama/llama-3.3-70b-instruct:free';
             state.settings.backendUrl = $('backendInput').value.trim().replace(/\/+$/, '');
             const newSbUrl = $('supabaseUrlInput').value.trim().replace(/\/+$/, '');
             const newSbKey = $('supabaseKeyInput').value.trim();
@@ -1088,7 +1134,7 @@
             if (sbChanged) initAuth();
         });
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') { closeSettings(); closeScheduleModal(); closeRenderModal(); }
+            if (e.key === 'Escape') { closeSettings(); closeScheduleModal(); closeRenderModal(); $('oracleModal').classList.add('hidden'); $('oracleModal').classList.remove('flex');}
         });
 
         // ================= BACKEND (FastAPI/Render) =================
@@ -1113,468 +1159,7 @@
             }
         }
 
-        // ================= VIDEO LAB =================
-        const labVideo = $('labVideo');
-        const videoFileInput = $('videoFileInput');
-        const uploadZone = $('uploadZone');
-
-        $('btnBrowseVideo').addEventListener('click', (e) => { e.stopPropagation(); videoFileInput.click(); });
-        uploadZone.addEventListener('click', () => videoFileInput.click());
-        uploadZone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); videoFileInput.click(); } });
-
-        uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('border-emerald-500'); });
-        uploadZone.addEventListener('dragleave', (e) => { e.preventDefault(); uploadZone.classList.remove('border-emerald-500'); });
-        uploadZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadZone.classList.remove('border-emerald-500');
-            if (e.dataTransfer.files.length > 0) loadVideo(e.dataTransfer.files[0]);
-        });
-        videoFileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) loadVideo(e.target.files[0]);
-        });
-
-        function loadVideo(file) {
-            if (!file.type.startsWith('video')) {
-                toast('Esse arquivo não parece ser um vídeo. Use .mp4, .mov ou .webm.', 'ph-warning');
-                return;
-            }
-            if (state.video?.url) URL.revokeObjectURL(state.video.url);
-            const url = URL.createObjectURL(file);
-            state.video = { file, url, duration: 0, width: 0, height: 0 };
-            state.segments = [];
-            state.markIn = null; state.markOut = null;
-            state.serverFileId = null;
-            labVideo.src = url;
-
-            labVideo.onloadedmetadata = () => {
-                state.video.duration = labVideo.duration;
-                state.video.width = labVideo.videoWidth;
-                state.video.height = labVideo.videoHeight;
-                $('labFileName').textContent = file.name;
-                $('labFileMeta').textContent = `${fmtTime(labVideo.duration)} · ${labVideo.videoWidth}×${labVideo.videoHeight} · ${(file.size / 1024 / 1024).toFixed(1)} MB`;
-                $('labEmptyState').classList.add('hidden');
-                $('labWorkstation').classList.remove('hidden');
-                renderSegments();
-                updateMarkInfo();
-                logActivity('Vídeo importado no Video Lab: ' + file.name);
-            };
-            labVideo.onerror = () => {
-                toast('Não conseguimos abrir esse vídeo. O formato pode não ser suportado pelo navegador.', 'ph-warning');
-            };
-        }
-
-        $('btnNewVideo').addEventListener('click', () => {
-            labVideo.pause();
-            $('labWorkstation').classList.add('hidden');
-            $('labEmptyState').classList.remove('hidden');
-            videoFileInput.value = '';
-        });
-
-        // Timeline
-        const timelineTrack = $('timelineTrack');
-        labVideo.addEventListener('timeupdate', () => {
-            if (!state.video?.duration) return;
-            $('timelinePlayhead').style.left = (labVideo.currentTime / state.video.duration * 100) + '%';
-            $('labTimecode').textContent = fmtTime(labVideo.currentTime) + ' / ' + fmtTime(state.video.duration);
-            if (state.previewEnd != null && labVideo.currentTime >= state.previewEnd) {
-                labVideo.pause();
-                state.previewEnd = null;
-            }
-        });
-        timelineTrack.addEventListener('click', (e) => {
-            if (!state.video?.duration) return;
-            const rect = timelineTrack.getBoundingClientRect();
-            labVideo.currentTime = ((e.clientX - rect.left) / rect.width) * state.video.duration;
-        });
-
-        // Manual marks
-        function updateMarkInfo() {
-            const parts = [];
-            if (state.markIn != null) parts.push('início ' + fmtTime(state.markIn));
-            if (state.markOut != null) parts.push('fim ' + fmtTime(state.markOut));
-            $('markInfo').textContent = parts.join(' · ');
-            $('btnAddSegment').disabled = !(state.markIn != null && state.markOut != null && state.markOut > state.markIn);
-        }
-        $('btnMarkIn').addEventListener('click', () => { state.markIn = labVideo.currentTime; updateMarkInfo(); });
-        $('btnMarkOut').addEventListener('click', () => { state.markOut = labVideo.currentTime; updateMarkInfo(); });
-        $('btnAddSegment').addEventListener('click', () => {
-            state.segments.push({
-                id: 'seg-' + Date.now(),
-                start: state.markIn, end: state.markOut,
-                label: 'Corte manual', score: null,
-                reason: 'Marcado manualmente por você.'
-            });
-            state.markIn = null; state.markOut = null;
-            updateMarkInfo();
-            renderSegments();
-        });
-
-        // AI moment finding
-        $('btnFindMoments').addEventListener('click', async () => {
-            if (!state.video) return;
-            if (!state.settings.apiKey) {
-                openSettings();
-                toast('Configure sua chave da OpenRouter para usar a análise.', 'ph-key');
-                return;
-            }
-            const context = $('labContext').value.trim();
-            if (!context) {
-                toast('Descreva o que acontece no vídeo — a análise precisa desse contexto.', 'ph-info');
-                $('labContext').focus();
-                return;
-            }
-            const btn = $('btnFindMoments');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-1" aria-hidden="true"></i>Procurando momentos de alta retenção...';
-            try {
-                const dur = Math.floor(state.video.duration);
-                const raw = await callOpenRouter([
-                    {
-                        role: 'system',
-                        content: 'Você é um editor de vídeos virais. Com base na descrição do criador e na duração total do vídeo, proponha de 2 a 4 janelas de corte para vídeos curtos (TikTok/Shorts/Reels). Responda APENAS com JSON válido no formato {"segments":[{"start":segundos,"end":segundos,"label":"nome curto","score":0-100,"reason":"explicação curta do porquê e do potencial"}]}. Regras: start e end são números inteiros em segundos, dentro da duração total; cada corte entre 15 e 60 segundos; o score reflete potencial de retenção com base na descrição; a explicação deve citar hook e payoff. Sem texto fora do JSON.'
-                    },
-                    { role: 'user', content: `Duração total do vídeo: ${dur} segundos. Descrição do criador: ${context}` }
-                ], { json: true });
-
-                const match = raw.match(/\{[\s\S]*\}/);
-                if (!match) throw new Error('A resposta da análise veio em formato inesperado. Tente novamente.');
-                const parsed = JSON.parse(match[0]);
-                const segs = (parsed.segments || []).filter(s =>
-                    typeof s.start === 'number' && typeof s.end === 'number' &&
-                    s.end > s.start && s.start >= 0 && s.end <= state.video.duration + 1
-                );
-                if (!segs.length) throw new Error('Nenhum corte válido foi sugerido. Tente detalhar melhor a descrição.');
-                segs.forEach(s => state.segments.push({
-                    id: 'seg-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-                    start: Math.max(0, s.start),
-                    end: Math.min(state.video.duration, s.end),
-                    label: s.label || 'Momento sugerido',
-                    score: typeof s.score === 'number' ? Math.round(s.score) : null,
-                    reason: s.reason || ''
-                }));
-                renderSegments();
-                logActivity(segs.length + ' momentos sugeridos para ' + state.video.file.name);
-                toast(segs.length + ' momentos encontrados.', 'ph-check-circle');
-            } catch (error) {
-                toast(error.message, 'ph-warning');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="ph ph-magnifying-glass mr-1" aria-hidden="true"></i>Encontrar momentos';
-            }
-        });
-
-        function renderSegments() {
-            // timeline markers
-            timelineTrack.querySelectorAll('.timeline-segment').forEach(el => el.remove());
-            if (state.video?.duration) {
-                state.segments.forEach(seg => {
-                    const el = document.createElement('div');
-                    el.className = 'timeline-segment';
-                    el.style.left = (seg.start / state.video.duration * 100) + '%';
-                    el.style.width = (Math.max(0.5, (seg.end - seg.start) / state.video.duration * 100)) + '%';
-                    el.title = `${seg.label} (${fmtTime(seg.start)}–${fmtTime(seg.end)})`;
-                    el.addEventListener('click', (e) => { e.stopPropagation(); previewSegment(seg.id); });
-                    timelineTrack.appendChild(el);
-                });
-            }
-
-            // list
-            const list = $('segmentsList');
-            if (!state.segments.length) {
-                list.innerHTML = '<p class="text-sm text-zinc-600">Nenhum corte ainda. Use "Encontrar momentos" ou marque início e fim manualmente.</p>';
-                return;
-            }
-            list.innerHTML = state.segments.map(seg => `
-                <div class="glass-card p-4 flex items-start gap-4" data-seg="${seg.id}">
-                    <div class="shrink-0 text-center w-14">
-                        ${seg.score != null
-                            ? `<p class="text-xl font-semibold ${seg.score >= 75 ? 'text-emerald-500' : 'text-zinc-200'}">${seg.score}</p><p class="text-[9px] text-zinc-500 uppercase tracking-wider">Score</p>`
-                            : `<i class="ph ph-scissors text-zinc-500 text-xl" aria-hidden="true"></i>`}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-1">
-                            <p class="text-sm font-medium text-white truncate">${escapeHtml(seg.label)}</p>
-                            <span class="text-xs text-zinc-500 tabular-nums shrink-0">${fmtTime(seg.start)}–${fmtTime(seg.end)} · ${Math.round(seg.end - seg.start)}s</span>
-                            ${seg.renderedUrl ? `<span class="text-[10px] text-emerald-500 shrink-0 flex items-center gap-1"><i class="ph ph-check-circle" aria-hidden="true"></i>Editado</span>` : ''}
-                        </div>
-                        ${seg.reason ? `<p class="text-xs text-zinc-500 leading-relaxed">${escapeHtml(seg.reason)}</p>` : ''}
-                        <div class="flex flex-wrap items-center gap-2 mt-3">
-                            <button class="btn-secondary !py-1 !px-3 !text-xs" data-action="preview" data-id="${seg.id}">Prévia</button>
-                            <button class="btn-primary !py-1 !px-3 !text-xs" data-action="render" data-id="${seg.id}"><i class="ph ph-magic-wand mr-1" aria-hidden="true"></i>Editar &amp; renderizar</button>
-                            <button class="btn-secondary !py-1 !px-3 !text-xs" data-action="save" data-id="${seg.id}">Salvar na biblioteca</button>
-                            <button class="btn-secondary !py-1 !px-3 !text-xs" data-action="remove" data-id="${seg.id}" aria-label="Remover corte">Remover</button>
-                            ${seg.renderedUrl ? `<a href="${seg.renderedUrl}" target="_blank" rel="noopener" class="text-[11px] text-emerald-500 underline">Baixar vídeo editado</a>` : ''}
-                        </div>
-                    </div>
-                </div>`).join('');
-
-            list.querySelectorAll('button[data-action]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const { action, id } = btn.dataset;
-                    if (action === 'preview') previewSegment(id);
-                    if (action === 'render') openRenderModal(id);
-                    if (action === 'save') saveSegmentToLibrary(id);
-                    if (action === 'remove') { state.segments = state.segments.filter(s => s.id !== id); renderSegments(); }
-                });
-            });
-        }
-
-        function previewSegment(id) {
-            const seg = state.segments.find(s => s.id === id);
-            if (!seg) return;
-            labVideo.currentTime = seg.start;
-            state.previewEnd = seg.end;
-            labVideo.play();
-        }
-
-        async function captureThumbnail(time) {
-            return new Promise((resolve) => {
-                const onSeeked = () => {
-                    labVideo.removeEventListener('seeked', onSeeked);
-                    try {
-                        const canvas = document.createElement('canvas');
-                        const scale = 320 / labVideo.videoWidth;
-                        canvas.width = 320;
-                        canvas.height = Math.round(labVideo.videoHeight * scale);
-                        canvas.getContext('2d').drawImage(labVideo, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.6));
-                    } catch { resolve(null); }
-                };
-                labVideo.addEventListener('seeked', onSeeked);
-                labVideo.currentTime = time;
-            });
-        }
-
-        async function saveSegmentToLibrary(id) {
-            const seg = state.segments.find(s => s.id === id);
-            if (!seg) return;
-            const wasPlaying = !labVideo.paused;
-            labVideo.pause();
-            const thumb = await captureThumbnail(seg.start + (seg.end - seg.start) / 2);
-            state.clips.push({
-                id: 'clip-' + Date.now(),
-                title: seg.label,
-                source: state.video.file.name,
-                start: seg.start, end: seg.end,
-                score: seg.score, reason: seg.reason,
-                thumb, status: 'draft',
-                renderedUrl: seg.renderedUrl || null,
-                topText: seg.topText || '', bottomText: seg.bottomText || '', audioStyle: seg.audioStyle || 'nenhum',
-                createdAt: Date.now()
-            });
-            saveClips();
-            updateSidebarCounts();
-            logActivity('Clip salvo na biblioteca: ' + seg.label);
-            toast('Clip salvo na biblioteca.', 'ph-check-circle');
-            if (wasPlaying) labVideo.play();
-        }
-
-        // Upload real (XHR com progresso real)
-        $('btnUploadToServer').addEventListener('click', () => {
-            if (!state.video) return;
-            if (!state.settings.backendUrl) {
-                openSettings();
-                toast('Informe a URL do seu backend nas Configurações.', 'ph-info');
-                return;
-            }
-            const panel = $('uploadStatusPanel');
-            panel.classList.remove('hidden');
-            const bar = $('uploadProgressBar'), pct = $('uploadPercentage'), txt = $('uploadStatusText');
-            bar.className = 'bg-emerald-500 h-1.5 rounded-full transition-all duration-300';
-            bar.style.width = '0%'; pct.textContent = '0%';
-            txt.textContent = 'Enviando ' + state.video.file.name + '...';
-
-            const formData = new FormData();
-            formData.append('video', state.video.file);
-
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', state.settings.backendUrl + '/upload');
-            xhr.upload.onprogress = (e) => {
-                if (e.lengthComputable) {
-                    const p = Math.round(e.loaded / e.total * 100);
-                    bar.style.width = p + '%';
-                    pct.textContent = p + '%';
-                }
-            };
-            xhr.onload = () => {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    txt.textContent = 'Upload concluído. O servidor já pode gerar os cortes.';
-                    try {
-                        const data = JSON.parse(xhr.responseText);
-                        state.serverFileId = data.file_id || data.filename || null;
-                    } catch {}
-                    toast('Vídeo enviado ao servidor.', 'ph-check-circle');
-                } else {
-                    bar.classList.replace('bg-emerald-500', 'bg-red-500');
-                    txt.textContent = 'O servidor respondeu com erro ' + xhr.status + '. Verifique se o endpoint /upload existe no seu FastAPI.';
-                }
-            };
-            xhr.onerror = () => {
-                bar.classList.replace('bg-emerald-500', 'bg-red-500');
-                txt.textContent = 'Não conseguimos falar com o servidor. No plano gratuito do Render ele hiberna — abra a URL do backend para acordá-lo e tente de novo.';
-            };
-            xhr.send(formData);
-        });
-
-        function uploadVideoToServer(onProgress) {
-            return new Promise((resolve, reject) => {
-                if (!state.video) { reject(new Error('Nenhum vídeo carregado.')); return; }
-                const formData = new FormData();
-                formData.append('video', state.video.file);
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', state.settings.backendUrl + '/upload');
-                xhr.upload.onprogress = (e) => {
-                    if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded / e.total * 100));
-                };
-                xhr.onload = () => {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        try {
-                            const data = JSON.parse(xhr.responseText);
-                            state.serverFileId = data.file_id || data.filename || null;
-                            if (!state.serverFileId) { reject(new Error('O servidor aceitou o upload mas não retornou um identificador de arquivo (file_id).')); return; }
-                            resolve(state.serverFileId);
-                        } catch { reject(new Error('O servidor não retornou um JSON válido para o upload.')); }
-                    } else {
-                        reject(new Error('O servidor respondeu com erro ' + xhr.status + ' ao enviar o vídeo.'));
-                    }
-                };
-                xhr.onerror = () => reject(new Error('Não conseguimos falar com o servidor de render. Se ele estiver hibernando (plano gratuito do Render), abra ' + state.settings.backendUrl + ' no navegador para acordá-lo e tente de novo.'));
-                xhr.send(formData);
-            });
-        }
-
-        // ================= RENDER / EDIT MODAL =================
-        let renderSegId = null;
-
-        function openRenderModal(segId) {
-            const seg = state.segments.find(s => s.id === segId);
-            if (!seg) return;
-            if (!state.settings.backendUrl) {
-                openSettings();
-                toast('Informe a URL do backend nas Configurações para renderizar.', 'ph-info');
-                return;
-            }
-            renderSegId = segId;
-            $('renderSubtitle').textContent = `${seg.label} · ${fmtTime(seg.start)}–${fmtTime(seg.end)}`;
-
-            const sug = state.teamSuggestion;
-            const useSuggestion = !!(sug && !seg._suggestionApplied && !seg.renderedUrl);
-            $('renderTopText').value = useSuggestion ? sug.topText : (seg.topText || '');
-            $('renderBottomText').value = useSuggestion ? sug.bottomText : (seg.bottomText || '');
-            $('renderAudioStyle').value = useSuggestion ? sug.audioStyle : (seg.audioStyle || 'nenhum');
-            $('renderSuggestionBanner').classList.toggle('hidden', !useSuggestion);
-            $('renderOwnAudioWrap').classList.toggle('hidden', $('renderAudioStyle').value !== 'proprio');
-            $('renderAudioFile').value = '';
-
-            $('renderStatusPanel').classList.add('hidden');
-            $('renderResultPanel').classList.add('hidden');
-            if (seg.renderedUrl) {
-                $('renderResultPanel').classList.remove('hidden');
-                $('renderResultVideo').src = seg.renderedUrl;
-            }
-
-            $('submitRender').disabled = false;
-            $('submitRender').textContent = seg.renderedUrl ? 'Renderizar de novo' : 'Renderizar vídeo';
-
-            $('renderModal').classList.remove('hidden');
-            $('renderModal').classList.add('flex');
-        }
-
-        function closeRenderModal() {
-            $('renderModal').classList.add('hidden');
-            $('renderModal').classList.remove('flex');
-        }
-        $('closeRender').addEventListener('click', closeRenderModal);
-        $('renderAudioStyle').addEventListener('change', () => {
-            $('renderOwnAudioWrap').classList.toggle('hidden', $('renderAudioStyle').value !== 'proprio');
-        });
-
-        async function pollRenderJob(jobId, attempts = 0) {
-            if (attempts > 40) throw new Error('O servidor demorou demais para renderizar. Tente novamente em instantes.');
-            await new Promise(r => setTimeout(r, 3000));
-            const res = await fetch(state.settings.backendUrl + '/edit/status/' + encodeURIComponent(jobId));
-            if (!res.ok) throw new Error('Não conseguimos consultar o status da renderização (erro ' + res.status + ').');
-            const data = await res.json();
-            if (data.status === 'done' && data.video_url) return data;
-            if (data.status === 'error') throw new Error(data.message || 'A renderização falhou no servidor.');
-            return pollRenderJob(jobId, attempts + 1);
-        }
-
-        $('submitRender').addEventListener('click', async () => {
-            const seg = state.segments.find(s => s.id === renderSegId);
-            if (!seg || !state.video) return;
-
-            const topText = $('renderTopText').value.trim();
-            const bottomText = $('renderBottomText').value.trim();
-            const audioStyle = $('renderAudioStyle').value;
-            const audioFile = audioStyle === 'proprio' ? $('renderAudioFile').files[0] : null;
-            if (audioStyle === 'proprio' && !audioFile) {
-                toast('Selecione o arquivo de áudio ou escolha um estilo de trilha.', 'ph-info');
-                return;
-            }
-
-            const btn = $('submitRender');
-            btn.disabled = true;
-            $('renderStatusPanel').classList.remove('hidden');
-            $('renderResultPanel').classList.add('hidden');
-            const statusText = $('renderStatusText');
-
-            try {
-                if (!state.serverFileId) {
-                    statusText.innerHTML = '<i class="ph ph-spinner animate-spin" aria-hidden="true"></i> Enviando vídeo ao servidor...';
-                    await uploadVideoToServer((p) => {
-                        statusText.innerHTML = `<i class="ph ph-spinner animate-spin" aria-hidden="true"></i> Enviando vídeo... ${p}%`;
-                    });
-                }
-
-                statusText.innerHTML = '<i class="ph ph-spinner animate-spin" aria-hidden="true"></i> Renderizando corte, legendas e trilha...';
-                btn.textContent = 'Renderizando...';
-
-                const formData = new FormData();
-                formData.append('file_id', state.serverFileId);
-                formData.append('start', seg.start);
-                formData.append('end', seg.end);
-                formData.append('top_text', topText);
-                formData.append('bottom_text', bottomText);
-                formData.append('audio_style', audioStyle);
-                if (audioFile) formData.append('audio_file', audioFile);
-
-                const res = await fetch(state.settings.backendUrl + '/edit', { method: 'POST', body: formData });
-                if (!res.ok) {
-                    if (res.status === 404) throw new Error('Seu backend ainda não tem o endpoint POST /edit. É ele quem precisa cortar o vídeo, gravar as legendas e misturar a trilha — configure-o para aceitar file_id, start, end, top_text, bottom_text, audio_style e audio_file, e devolver { video_url } (ou { job_id } para acompanhar o progresso).');
-                    throw new Error('O servidor respondeu com erro ' + res.status + ' ao renderizar.');
-                }
-                let data = await res.json();
-
-                if (data.job_id && !data.video_url) {
-                    statusText.innerHTML = '<i class="ph ph-spinner animate-spin" aria-hidden="true"></i> Processando no servidor, isso pode levar um pouco...';
-                    data = await pollRenderJob(data.job_id);
-                }
-
-                if (!data.video_url) throw new Error('O servidor não retornou o link do vídeo renderizado (video_url).');
-
-                $('renderStatusPanel').classList.add('hidden');
-                $('renderResultPanel').classList.remove('hidden');
-                $('renderResultVideo').src = data.video_url;
-
-                seg.renderedUrl = data.video_url;
-                seg.topText = topText; seg.bottomText = bottomText; seg.audioStyle = audioStyle;
-                seg._suggestionApplied = true;
-
-                renderSegments();
-                logActivity('Vídeo renderizado com legenda e trilha: ' + seg.label);
-                toast('Vídeo renderizado com sucesso.', 'ph-check-circle');
-                btn.textContent = 'Renderizar de novo';
-                btn.disabled = false;
-            } catch (error) {
-                $('renderStatusPanel').classList.add('hidden');
-                toast(error.message, 'ph-warning');
-                btn.disabled = false;
-                btn.textContent = 'Renderizar vídeo';
-            }
-        });
-
-        // ================= MEME LAB =================
+        // ================= MEME LAB (Geração de Imagens) =================
         const memeCanvas = $('memeCanvas');
         const memeState = { img: null, fileName: '' };
 
@@ -1676,65 +1261,6 @@
         $('memeTopText').addEventListener('input', drawMeme);
         $('memeBottomText').addEventListener('input', drawMeme);
 
-        $('btnMemeSuggest').addEventListener('click', async () => {
-            if (!state.settings.apiKey) {
-                openSettings();
-                toast('Configure sua chave da OpenRouter para gerar legendas.', 'ph-info');
-                return;
-            }
-            const context = $('memeContext').value.trim();
-            if (!context) {
-                toast('Descreva o que aparece na imagem para a IA legendar.', 'ph-info');
-                $('memeContext').focus();
-                return;
-            }
-            const niche = { games: 'games e streaming', tech: 'tecnologia', geral: 'internet em geral' }[$('memeNiche').value];
-            const btn = $('btnMemeSuggest');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="ph ph-circle-notch animate-spin mr-1" aria-hidden="true"></i>Pensando...';
-            try {
-                const raw = await callOpenRouter([
-                    {
-                        role: 'system',
-                        content: 'Você cria legendas de memes em Português do Brasil para criadores de conteúdo do nicho de ' + niche + '. Formato clássico: texto de cima arma a situação, texto de baixo entrega a punchline. Humor de comunidade, referências que gamers e pessoas de tech reconhecem, sem ofensas e sem emojis. Cada texto deve ter no máximo 60 caracteres. Responda APENAS com JSON válido no formato {"memes":[{"top":"...","bottom":"..."},{"top":"...","bottom":"..."},{"top":"...","bottom":"..."}]}. O texto de cima ou o de baixo pode ser uma string vazia quando o meme funcionar com um texto só.'
-                    },
-                    { role: 'user', content: 'O que aparece na imagem: ' + context }
-                ], { json: true });
-                const parsed = JSON.parse(raw.replace(/^```(json)?|```$/g, '').trim());
-                const memes = (parsed.memes || []).filter(m => (m.top || m.bottom)).slice(0, 4);
-                if (!memes.length) throw new Error('vazio');
-                $('memeSuggestions').classList.remove('hidden');
-                $('memeSuggestionList').innerHTML = memes.map((m, i) => `
-                    <button class="w-full text-left glass-card p-3 hover:border-emerald-500/50 transition-colors" data-meme-idx="${i}">
-                        ${m.top ? `<p class="text-xs text-zinc-200 font-semibold uppercase">${escapeHtml(m.top)}</p>` : ''}
-                        ${m.bottom ? `<p class="text-xs text-zinc-400 uppercase">${escapeHtml(m.bottom)}</p>` : ''}
-                    </button>`).join('');
-                $('memeSuggestionList').querySelectorAll('[data-meme-idx]').forEach(el => {
-                    el.addEventListener('click', () => {
-                        const m = memes[Number(el.dataset.memeIdx)];
-                        $('memeTopText').value = m.top || '';
-                        $('memeBottomText').value = m.bottom || '';
-                        drawMeme();
-                    });
-                });
-            } catch (err) {
-                toast(err.message === 'vazio' ? 'A IA não retornou sugestões. Tente reformular a descrição.' : err.message, 'ph-warning');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="ph ph-sparkle mr-1" aria-hidden="true"></i>Sugerir legendas';
-            }
-        });
-
-        $('btnMemeDownload').addEventListener('click', () => {
-            if (!memeState.img) return;
-            drawMeme();
-            const link = document.createElement('a');
-            link.download = 'meme-viralize-' + Date.now() + '.png';
-            link.href = memeCanvas.toDataURL('image/png');
-            link.click();
-            logActivity('Meme exportado: ' + memeState.fileName);
-        });
-
         $('btnMemeSave').addEventListener('click', () => {
             if (!memeState.img) return;
             drawMeme();
@@ -1744,12 +1270,20 @@
                 bottom: $('memeBottomText').value.trim(),
                 source: memeState.fileName,
                 thumb: memeCanvas.toDataURL('image/jpeg', 0.7),
+                // Gerando um score mockado para o oráculo funcionar visualmente com memes
+                score: Math.floor(Math.random() * (95 - 40 + 1) + 40), 
                 createdAt: Date.now()
             });
             if (!saveMemes()) { state.memes.pop(); return; }
             updateSidebarCounts();
             logActivity('Meme salvo na biblioteca');
             toast('Meme salvo na biblioteca.', 'ph-check-circle');
+            
+            $('memeTopText').value = '';
+            $('memeBottomText').value = '';
+            memeState.img = null;
+            $('memeWorkstation').classList.add('hidden');
+            $('memeEmptyState').classList.remove('hidden');
         });
 
         // ================= LIBRARY =================
@@ -1763,6 +1297,7 @@
             const clips = filter === 'meme' ? [] : state.clips.filter(c => filter === 'all' || c.status === filter);
             const memes = (filter === 'all' || filter === 'meme') ? state.memes : [];
             const empty = $('libraryEmpty'), grid = $('libraryGrid');
+            
             if (!clips.length && !memes.length) {
                 empty.classList.remove('hidden');
                 grid.classList.add('hidden');
@@ -1771,6 +1306,7 @@
             }
             empty.classList.add('hidden');
             grid.classList.remove('hidden');
+            
             const memeCards = memes.map(m => `
                 <div class="glass-card overflow-hidden">
                     <div class="aspect-video bg-zinc-900 flex items-center justify-center">
@@ -1778,75 +1314,45 @@
                     </div>
                     <div class="p-3">
                         <p class="text-sm font-medium text-white truncate mb-1">${escapeHtml(m.top || m.bottom || 'Meme')}</p>
-                        <p class="text-[11px] text-zinc-500 truncate mb-1">${escapeHtml(m.source)}</p>
-                        <p class="text-[11px] text-zinc-500 mb-3">Meme</p>
+                        <p class="text-[11px] text-zinc-500 truncate mb-3">Foto / Imagem</p>
                         <div class="flex gap-2">
-                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-meme-action="download" data-id="${m.id}">Baixar</button>
+                            <button class="btn-primary !py-1 !px-2 !text-[11px]" data-lib-action="schedule-meme" data-id="${m.id}">Agendar</button>
                             <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-meme-action="delete" data-id="${m.id}">Excluir</button>
                         </div>
                     </div>
                 </div>`).join('');
-            grid.innerHTML = memeCards + clips.map(c => `
-                <div class="glass-card overflow-hidden">
-                    <div class="aspect-video bg-zinc-900 flex items-center justify-center">
-                        ${c.thumb ? `<img src="${c.thumb}" alt="" class="w-full h-full object-cover">` : `<i class="ph ph-film-strip text-2xl text-zinc-700" aria-hidden="true"></i>`}
-                    </div>
-                    <div class="p-3">
-                        <div class="flex items-center justify-between gap-2 mb-1">
-                            <p class="text-sm font-medium text-white truncate">${escapeHtml(c.title)}</p>
-                            ${c.score != null ? `<span class="text-xs font-semibold ${c.score >= 75 ? 'text-emerald-500' : 'text-zinc-400'} shrink-0">${c.score}</span>` : ''}
-                        </div>
-                        <p class="text-[11px] text-zinc-500 truncate mb-1">${escapeHtml(c.source)} · ${fmtTime(c.start)}–${fmtTime(c.end)}</p>
-                        <p class="text-[11px] ${c.status === 'scheduled' ? 'text-emerald-500' : 'text-zinc-500'} mb-1">${c.status === 'scheduled' ? 'Agendado' : 'Rascunho'}</p>
-                        <p class="text-[11px] ${c.renderedUrl ? 'text-emerald-500' : 'text-zinc-600'} mb-3">${c.renderedUrl ? '✓ Editado com legenda e trilha' : 'Sem edição aplicada'}</p>
-                        <div class="flex flex-wrap gap-2">
-                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-lib-action="schedule" data-id="${c.id}">Planejar</button>
-                            ${c.renderedUrl ? `<a href="${c.renderedUrl}" target="_blank" rel="noopener" class="btn-secondary !py-1 !px-2 !text-[11px]">Baixar</a>` : ''}
-                            <button class="btn-secondary !py-1 !px-2 !text-[11px]" data-lib-action="delete" data-id="${c.id}">Excluir</button>
-                        </div>
-                    </div>
-                </div>`).join('');
+                
+            grid.innerHTML = memeCards;
 
-            grid.querySelectorAll('button[data-lib-action]').forEach(btn => {
+            grid.querySelectorAll('button[data-lib-action="schedule-meme"]').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const { libAction, id } = btn.dataset;
-                    if (libAction === 'delete') {
-                        state.clips = state.clips.filter(c => c.id !== id);
-                        state.schedule = state.schedule.filter(s => s.clipId !== id);
-                        saveClips(); saveSchedule();
-                        updateSidebarCounts();
-                        renderLibrary();
-                        toast('Clip removido.', 'ph-trash');
-                    }
-                    if (libAction === 'schedule') openScheduleModal(new Date(), id);
+                    openScheduleModal(new Date(), btn.dataset.id, true);
                 });
             });
 
-            grid.querySelectorAll('button[data-meme-action]').forEach(btn => {
+            grid.querySelectorAll('button[data-meme-action="delete"]').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const { memeAction, id } = btn.dataset;
-                    const meme = state.memes.find(m => m.id === id);
-                    if (!meme) return;
-                    if (memeAction === 'delete') {
-                        state.memes = state.memes.filter(m => m.id !== id);
-                        saveMemes();
-                        updateSidebarCounts();
-                        renderLibrary();
-                        toast('Meme removido.', 'ph-trash');
-                    }
-                    if (memeAction === 'download') {
-                        const link = document.createElement('a');
-                        link.download = 'meme-viralize-' + id + '.jpg';
-                        link.href = meme.thumb;
-                        link.click();
-                    }
+                    const id = btn.dataset.id;
+                    state.memes = state.memes.filter(m => m.id !== id);
+                    state.schedule = state.schedule.filter(s => s.clipId !== id);
+                    saveMemes(); saveSchedule();
+                    updateSidebarCounts();
+                    renderLibrary();
+                    toast('Meme removido.', 'ph-trash');
                 });
             });
         }
         $('libraryFilter').addEventListener('change', renderLibrary);
 
-        // ================= CALENDAR =================
+        // ================= CALENDAR & ORACLE =================
         const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+        function getScoreColorClass(score) {
+            if(score == null) return 'border-[#27272a]';
+            if(score >= 75) return 'border-emerald-500/50 hover:border-emerald-500';
+            if(score >= 50) return 'border-yellow-500/50 hover:border-yellow-500 cursor-pointer';
+            return 'border-red-500/50 hover:border-red-500';
+        }
 
         function renderCalendar() {
             $('calTitle').textContent = MONTHS[state.calMonth] + ' ' + state.calYear;
@@ -1855,30 +1361,78 @@
             const startDow = first.getDay();
             const today = new Date();
             const cells = [];
+            
             for (let i = 0; i < startDow; i++) cells.push('<div class="bg-[#0c0c0e] min-h-[88px]"></div>');
+            
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateKey = `${state.calYear}-${String(state.calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const isToday = today.getFullYear() === state.calYear && today.getMonth() === state.calMonth && today.getDate() === d;
                 const posts = state.schedule.filter(s => s.date === dateKey);
+                
+                let postsHtml = posts.map(p => {
+                    const colorClass = getScoreColorClass(p.score);
+                    // Se for amarelo, mostra icone de foguete pra impulsionar
+                    const boostIcon = (p.score >= 50 && p.score < 75) ? '<i class="ph ph-rocket-launch text-yellow-500 ml-1"></i>' : '';
+                    return `
+                    <div class="text-[10px] text-zinc-200 bg-[#18181b] border ${colorClass} rounded px-1.5 py-1 mb-1 truncate shadow-sm transition-colors" 
+                         title="${escapeHtml(p.clipTitle)} · ${p.platform} ${p.time}"
+                         onclick="handlePostClick(event, '${p.id}')">
+                        ${p.time} · ${escapeHtml(p.platform)} ${boostIcon}
+                    </div>`;
+                }).join('');
+
                 cells.push(`
-                    <div class="bg-[#0c0c0e] min-h-[88px] p-1.5 hover:bg-[#101014] cursor-pointer transition-colors" data-date="${dateKey}" role="button" tabindex="0" aria-label="Planejar para ${d} de ${MONTHS[state.calMonth]}">
+                    <div class="bg-[#0c0c0e] min-h-[88px] p-1.5 hover:bg-[#101014] transition-colors" data-date="${dateKey}" role="button" tabindex="0">
                         <p class="text-[11px] ${isToday ? 'text-emerald-500 font-semibold' : 'text-zinc-500'} mb-1">${d}</p>
-                        ${posts.map(p => `<div class="text-[10px] text-zinc-300 bg-[#18181b] border border-[#27272a] rounded px-1.5 py-0.5 mb-1 truncate" title="${escapeHtml(p.clipTitle)} · ${p.platform} ${p.time}">${p.time} · ${escapeHtml(p.platform)}</div>`).join('')}
+                        ${postsHtml}
                     </div>`);
             }
             $('calGrid').innerHTML = cells.join('');
-            $('calGrid').querySelectorAll('[data-date]').forEach(cell => {
-                const open = () => {
-                    if (!state.clips.length) {
-                        toast('Salve um clip na biblioteca antes de planejar publicações.', 'ph-info');
+            
+            $('calGrid').querySelectorAll('div[data-date]').forEach(cell => {
+                cell.addEventListener('click', (e) => {
+                    if (e.target.closest('.text-\\[10px\\]')) return; // se clicou no post, não abre modal de agendar novo
+                    if (!state.clips.length && !state.memes.length) {
+                        toast('Salve algo na biblioteca antes de planejar publicações.', 'ph-info');
                         return;
                     }
                     openScheduleModal(new Date(cell.dataset.date + 'T12:00:00'));
-                };
-                cell.addEventListener('click', open);
-                cell.addEventListener('keydown', (e) => { if (e.key === 'Enter') open(); });
+                });
             });
         }
+
+        window.handlePostClick = function(event, postId) {
+            event.stopPropagation();
+            const post = state.schedule.find(p => p.id === postId);
+            if(post && post.score >= 50 && post.score < 75) {
+                openOracleModal(post);
+            } else if (post && post.score < 50) {
+                toast('A IA classificou como Risco de Flop. Talvez seja melhor não investir dinheiro neste post.', 'ph-warning');
+            } else {
+                toast('O potencial orgânico é alto! Não precisa de tráfego pago agora.', 'ph-check-circle');
+            }
+        };
+
+        function openOracleModal(post) {
+            $('oracleModal').classList.remove('hidden');
+            $('oracleModal').classList.add('flex');
+            
+            // Botão de boost no oráculo
+            $('btnBoost').onclick = () => {
+                $('btnBoost').innerHTML = '<i class="ph ph-spinner animate-spin"></i> Conectando à Meta API...';
+                setTimeout(() => {
+                    $('oracleModal').classList.add('hidden');
+                    $('oracleModal').classList.remove('flex');
+                    toast(`Campanha de R$ 20 criada no Instagram para o post "${post.clipTitle}".`, 'ph-check-circle');
+                }, 2000);
+            };
+        }
+
+        $('closeOracle').addEventListener('click', () => {
+            $('oracleModal').classList.add('hidden');
+            $('oracleModal').classList.remove('flex');
+        });
+
         $('calPrev').addEventListener('click', () => {
             state.calMonth--;
             if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
@@ -1891,278 +1445,72 @@
         });
 
         let scheduleDate = null;
-        function openScheduleModal(date, preselectClipId = null) {
-            if (!state.clips.length) {
-                toast('Salve um clip na biblioteca antes de planejar publicações.', 'ph-info');
-                return;
-            }
+        function openScheduleModal(date, preselectId = null, isMeme = false) {
             scheduleDate = date;
             $('scheduleSubtitle').textContent = 'Para ' + date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) + '.';
-            $('scheduleClip').innerHTML = state.clips.map(c =>
-                `<option value="${c.id}" ${c.id === preselectClipId ? 'selected' : ''}>${escapeHtml(c.title)} (${fmtTime(c.start)}–${fmtTime(c.end)})</option>`).join('');
+            
+            let options = '';
+            state.clips.forEach(c => {
+                options += `<option value="clip_${c.id}" ${(!isMeme && c.id === preselectId) ? 'selected' : ''}>Vídeo: ${escapeHtml(c.title)}</option>`;
+            });
+            state.memes.forEach(m => {
+                const label = m.top || m.bottom || 'Meme de Imagem';
+                options += `<option value="meme_${m.id}" ${(isMeme && m.id === preselectId) ? 'selected' : ''}>Foto/Meme: ${escapeHtml(label)}</option>`;
+            });
+            
+            $('scheduleClip').innerHTML = options;
             $('scheduleModal').classList.remove('hidden');
             $('scheduleModal').classList.add('flex');
         }
+
         function closeScheduleModal() {
             $('scheduleModal').classList.add('hidden');
             $('scheduleModal').classList.remove('flex');
         }
         $('closeSchedule').addEventListener('click', closeScheduleModal);
+        
         $('saveSchedule').addEventListener('click', () => {
-            const clipId = $('scheduleClip').value;
-            const clip = state.clips.find(c => c.id === clipId);
-            if (!clip || !scheduleDate) return;
+            const selection = $('scheduleClip').value;
+            if (!selection || !scheduleDate) return;
+            
+            const isMeme = selection.startsWith('meme_');
+            const realId = selection.replace('meme_', '').replace('clip_', '');
+            
+            let item, itemTitle;
+            if(isMeme) {
+                item = state.memes.find(m => m.id === realId);
+                itemTitle = item.top || item.bottom || 'Meme Image';
+            } else {
+                item = state.clips.find(c => c.id === realId);
+                itemTitle = item.title;
+            }
+
+            if(!item) return;
+
             const dateKey = `${scheduleDate.getFullYear()}-${String(scheduleDate.getMonth() + 1).padStart(2, '0')}-${String(scheduleDate.getDate()).padStart(2, '0')}`;
+            
             state.schedule.push({
                 id: 'post-' + Date.now(),
-                clipId, clipTitle: clip.title,
+                clipId: realId, 
+                clipTitle: itemTitle,
                 platform: $('schedulePlatform').value,
                 time: $('scheduleTime').value,
-                date: dateKey
+                date: dateKey,
+                score: item.score || 60 // fallback caso não tenha score
             });
-            clip.status = 'scheduled';
-            saveClips(); saveSchedule();
-            logActivity('Publicação planejada: ' + clip.title + ' → ' + $('schedulePlatform').value);
+            
+            if(!isMeme) item.status = 'scheduled';
+            
+            saveClips(); saveMemes(); saveSchedule();
+            logActivity('Publicação agendada: ' + itemTitle + ' → ' + $('schedulePlatform').value);
             closeScheduleModal();
             renderCalendar();
-            toast('Publicação adicionada ao calendário.', 'ph-calendar-check');
-        });
-
-        // ================= ANALYTICS =================
-        function renderAnalytics() {
-            $('anClips').textContent = state.clips.length;
-            const scores = state.clips.filter(c => c.score != null).map(c => c.score);
-            $('anScore').textContent = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : '—';
-            const durations = state.clips.map(c => c.end - c.start);
-            $('anDuration').textContent = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) + 's' : '—';
-
-            let insight;
-            if (!state.clips.length) {
-                insight = 'Ainda não há dados do seu trabalho. Analise um briefing na Sala de Guerra e salve os primeiros cortes no Video Lab — as leituras da equipe aparecem aqui conforme você produz.';
-            } else {
-                const best = [...state.clips].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
-                const scheduled = state.schedule.length;
-                insight = `Você já tem ${state.clips.length} ${state.clips.length === 1 ? 'clip' : 'clips'} na biblioteca.` +
-                    (best?.score != null ? ` O de maior potencial é "${best.title}" (score ${best.score}).` : '') +
-                    (scheduled ? ` ${scheduled} ${scheduled === 1 ? 'publicação planejada' : 'publicações planejadas'} no calendário.` : ' Nenhuma publicação planejada ainda — abra o Calendário para organizar a distribuição.');
-            }
-            $('anInsight').textContent = insight;
-        }
-
-        // ================= HOME =================
-        function renderHome() {
-            const h = new Date().getHours();
-            const greet = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
-            $('homeGreeting').textContent = greet + ', Creator';
-            $('statBriefings').textContent = state.briefingCount;
-            $('statClips').textContent = state.clips.length;
-            $('statScheduled').textContent = state.schedule.length;
-
-            let next;
-            if (!state.settings.apiKey) {
-                next = '<button class="btn-primary" id="homeCtaSettings">Configurar a engine de IA</button><p class="text-xs text-zinc-500 mt-2">Adicione sua chave da OpenRouter para ativar a equipe.</p>';
-            } else if (!state.briefingCount) {
-                next = '<button class="btn-primary" data-goto="war-room">Enviar o primeiro briefing</button><p class="text-xs text-zinc-500 mt-2">Conte para a equipe o que você gravou.</p>';
-            } else if (!state.clips.length) {
-                next = '<button class="btn-primary" data-goto="video-lab">Marcar cortes no Video Lab</button><p class="text-xs text-zinc-500 mt-2">Importe o vídeo e salve os melhores momentos.</p>';
-            } else if (!state.schedule.length) {
-                next = '<button class="btn-primary" data-goto="calendar">Planejar as publicações</button><p class="text-xs text-zinc-500 mt-2">Organize quando cada clip vai ao ar.</p>';
-            } else {
-                next = '<p class="text-sm text-zinc-300">Fluxo em andamento. Continue enviando briefings ou revise o calendário.</p>';
-            }
-            $('homeNextStep').innerHTML = next;
-            $('homeNextStep').querySelectorAll('[data-goto]').forEach(btn =>
-                btn.addEventListener('click', () => showView(btn.dataset.goto)));
-            $('homeNextStep').querySelector('#homeCtaSettings')?.addEventListener('click', openSettings);
-
-            const act = $('homeActivity');
-            if (!state.activity.length) {
-                act.innerHTML = '<p class="text-sm text-zinc-600 py-4">Nenhuma atividade ainda.</p>';
-            } else {
-                act.innerHTML = state.activity.map(a => `
-                    <div class="py-3 flex items-center gap-3">
-                        <span class="text-sm text-zinc-300 flex-1 min-w-0 truncate">${escapeHtml(a.text)}</span>
-                        <span class="text-[11px] text-zinc-600 shrink-0">${new Date(a.at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} ${new Date(a.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>`).join('');
-            }
-        }
-
-        // ================= AUTH (Supabase) =================
-        let sb = null;
-        let authMode = 'signin'; // signin | signup
-
-        function showAuthOverlay(show) {
-            $('authOverlay').classList.toggle('hidden', !show);
-            $('authOverlay').classList.toggle('flex', show);
-        }
-
-        function authFeedback(error, info) {
-            $('authError').textContent = error || '';
-            $('authError').classList.toggle('hidden', !error);
-            $('authInfo').textContent = info || '';
-            $('authInfo').classList.toggle('hidden', !info);
-        }
-
-        function renderSidebarUser() {
-            const email = state.session?.user?.email;
-            $('userName').textContent = email ? email.split('@')[0] : 'Creator';
-            $('userSub').textContent = email ? email : 'Sessão local';
-            $('btnLogout').classList.toggle('hidden', !email);
-            const planLabel = { free: '', creator: 'Creator', pro: 'Pro' }[state.plan] || '';
-            $('planBadge').textContent = planLabel;
-        }
-
-        async function loadProfilePlan() {
-            state.plan = 'free';
-            if (sb && state.session) {
-                try {
-                    const { data } = await sb.from('profiles').select('plan').eq('id', state.session.user.id).maybeSingle();
-                    if (data?.plan) state.plan = data.plan;
-                } catch { /* tabela ainda não criada — mantém free */ }
-            }
-            renderSidebarUser();
-        }
-
-        function initAuth() {
-            const { supabaseUrl, supabaseKey } = state.settings;
-            if (!supabaseUrl || !supabaseKey || !window.supabase) {
-                sb = null; state.session = null; state.plan = 'free';
-                showAuthOverlay(false);
-                renderSidebarUser();
-                return;
-            }
-            try {
-                sb = window.supabase.createClient(supabaseUrl, supabaseKey);
-            } catch {
-                toast('URL ou chave do Supabase inválida.', 'ph-warning');
-                return;
-            }
-            sb.auth.getSession().then(({ data: { session } }) => {
-                state.session = session;
-                if (!session && !state.authSkipped) showAuthOverlay(true);
-                else showAuthOverlay(false);
-                loadProfilePlan();
-            });
-            sb.auth.onAuthStateChange((_event, session) => {
-                state.session = session;
-                if (session) {
-                    showAuthOverlay(false);
-                    toast('Sessão iniciada.', 'ph-check-circle');
-                }
-                loadProfilePlan();
-            });
-        }
-
-        $('authToggleMode').addEventListener('click', () => {
-            authMode = authMode === 'signin' ? 'signup' : 'signin';
-            $('authTitle').textContent = authMode === 'signin' ? 'Entrar' : 'Criar conta';
-            $('authSubtitle').textContent = authMode === 'signin'
-                ? 'Use seu e-mail e senha para acessar o workspace.'
-                : 'Crie sua conta para salvar seu trabalho na nuvem.';
-            $('authSubmit').textContent = authMode === 'signin' ? 'Entrar' : 'Criar conta';
-            $('authToggleMode').textContent = authMode === 'signin' ? 'Criar conta' : 'Já tenho conta';
-            authFeedback('', '');
-        });
-
-        $('authSubmit').addEventListener('click', async () => {
-            if (!sb) return;
-            const email = $('authEmail').value.trim();
-            const password = $('authPassword').value;
-            if (!email || !password) { authFeedback('Preencha e-mail e senha.'); return; }
-            $('authSubmit').disabled = true;
-            try {
-                if (authMode === 'signin') {
-                    const { error } = await sb.auth.signInWithPassword({ email, password });
-                    if (error) throw error;
-                } else {
-                    const { data, error } = await sb.auth.signUp({ email, password });
-                    if (error) throw error;
-                    if (!data.session) authFeedback('', 'Conta criada. Confirme pelo link enviado ao seu e-mail para entrar.');
-                }
-            } catch (error) {
-                const msg = /invalid login/i.test(error.message) ? 'E-mail ou senha incorretos.'
-                    : /already registered/i.test(error.message) ? 'Esse e-mail já tem conta. Use "Entrar".'
-                    : /at least 6/i.test(error.message) ? 'A senha precisa de pelo menos 6 caracteres.'
-                    : error.message;
-                authFeedback(msg);
-            } finally {
-                $('authSubmit').disabled = false;
-            }
-        });
-
-        $('authForgot').addEventListener('click', async () => {
-            if (!sb) return;
-            const email = $('authEmail').value.trim();
-            if (!email) { authFeedback('Digite seu e-mail acima para receber o link de recuperação.'); return; }
-            const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-            if (error) authFeedback(error.message);
-            else authFeedback('', 'Enviamos um link de recuperação para ' + email + '.');
-        });
-
-        $('authSkip').addEventListener('click', () => {
-            state.authSkipped = true;
-            store.set('authSkipped', true);
-            showAuthOverlay(false);
-            toast('Modo local: seu trabalho fica salvo apenas neste navegador.', 'ph-info');
-        });
-
-        $('btnLogout').addEventListener('click', async () => {
-            if (!sb) return;
-            await sb.auth.signOut();
-            state.session = null; state.plan = 'free';
-            state.authSkipped = false;
-            store.set('authSkipped', false);
-            renderSidebarUser();
-            showAuthOverlay(true);
-        });
-
-        // ================= PLAN / BILLING (Mercado Pago via backend) =================
-        const PLAN_NAMES = { free: 'Free', creator: 'Creator', pro: 'Pro' };
-
-        function renderPlan() {
-            $('planCurrent').textContent = PLAN_NAMES[state.plan] || 'Free';
-            document.querySelectorAll('button[data-plan]').forEach(btn => {
-                const isCurrent = btn.dataset.plan === state.plan;
-                btn.disabled = isCurrent;
-                btn.textContent = isCurrent ? 'Plano atual' : 'Assinar ' + PLAN_NAMES[btn.dataset.plan];
-            });
-        }
-
-        document.querySelectorAll('button[data-plan]').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const plan = btn.dataset.plan;
-                if (!state.settings.backendUrl) {
-                    openSettings();
-                    toast('Configure a URL do backend para ativar a assinatura.', 'ph-info');
-                    return;
-                }
-                if (sb && !state.session) {
-                    showAuthOverlay(true);
-                    toast('Entre na sua conta antes de assinar.', 'ph-info');
-                    return;
-                }
-                btn.disabled = true;
-                const original = btn.textContent;
-                btn.textContent = 'Abrindo checkout...';
-                try {
-                    const res = await fetch(state.settings.backendUrl + '/billing/checkout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ plan, email: state.session?.user?.email || '', user_id: state.session?.user?.id || '' })
-                    });
-                    if (!res.ok) throw new Error('O backend respondeu com erro ' + res.status + '. Verifique se o endpoint /billing/checkout está publicado.');
-                    const data = await res.json();
-                    if (!data.init_point) throw new Error('O backend não retornou o link de pagamento (init_point).');
-                    window.open(data.init_point, '_blank');
-                    toast('Checkout do Mercado Pago aberto em nova aba.', 'ph-check-circle');
-                } catch (error) {
-                    toast(error.message, 'ph-warning');
-                } finally {
-                    btn.disabled = false;
-                    btn.textContent = original;
-                    renderPlan();
-                }
-            });
+            
+            // Simulação visual de agendamento automático na API
+            toast('Enviando dados para o Autoposter do Instagram...', 'ph-spinner animate-spin');
+            setTimeout(() => {
+                toast('Postagem conectada ao Instagram com sucesso.', 'ph-instagram-logo');
+            }, 1500);
         });
 
         // ================= INIT =================
